@@ -1,5 +1,6 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 
@@ -48,17 +49,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     restore();
   }, []);
 
-  const signIn = async (credentials: { email: string; password: string }) => {
-    // enable fake <logic 
-    // setUser({ role: 'user', name: credentials.email});
-    setUser({ role: 'agent', name: credentials.email});
-    setLoading(false)
-    // const res = await api.login(credentials); // { token: '...' }
-    // if (!res?.token) throw new Error('Login failed');
-    // await AsyncStorage.setItem('token', res.token);
-    // const profile = await api.getProfile(res.token);
-    // setUser(profile);
+const signInold = async (credentials: { email: string; password: string }) => {
+  // enable fake <logic 
+  // setUser({ role: 'user', name: credentials.email});
+  // setUser({ role: 'agent', name: credentials.email});
+  setLoading(false)
+  const res = await api.login(credentials); // { token: '...' }
+  if (!res?.token) throw new Error('Login failed');
+  await AsyncStorage.setItem('token', res.token);
+  const profile = await api.getProfile(res.token);
+  setUser(profile);
+};
+
+
+const signIn = async (credentials: { email: string; password: string }): Promise<void> => {
+  console.log('Signing in with credentials:', credentials);
+  setLoading(true);
+  try {
+  const res = await api.login(credentials);
+  console.log('[DEBUG] API response:', res);
+
+  const token = res.data?.token;
+  if (!token) throw new Error(res.message || 'Login failed: token not received');
+  await AsyncStorage.setItem('token', token);
+
+  const userDetails = {
+    ...res.data.user,
+    role: res.data.user.role,
+    name: res.data.user.full_name || res.data.user.name,
+    email: res.data.user.email,
   };
+  setUser(userDetails);
+
+  // Console log user details
+  console.log('[DEBUG] User details after login:', userDetails);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn('[DEBUG] Login failed:', message);
+    setUser(null);
+    Alert.alert('Login failed', message || 'Unknown error');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
 
   const signOut = async () => {
     await AsyncStorage.removeItem('token');

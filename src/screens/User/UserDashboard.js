@@ -24,28 +24,6 @@ fetch();
 // Helper for displaying counts safely
 const getCount = (items) => (items && items.length) || 0;
 
-// return (
-// <SafeAreaView style={{flex:1, padding:16}}>
-// <Text style={{fontSize:20, fontWeight:'700', marginBottom:12}}>Dashboard</Text>
-// <TouchableOpacity style={{padding:12, borderWidth:1, borderColor:'#eee', borderRadius:8, marginBottom:8}} onPress={()=>navigation.navigate('MyInsurance')}>
-// <Text style={{fontWeight:'700'}}>My Insurance</Text>
-// <Text>{data?.myInsurance?.length || 0} policies</Text>
-// </TouchableOpacity>
-
-
-// <TouchableOpacity style={{padding:12, borderWidth:1, borderColor:'#eee', borderRadius:8, marginBottom:8}} onPress={()=>navigation.navigate('UpcomingInstallment')}>
-// <Text style={{fontWeight:'700'}}>Upcoming Installment</Text>
-// <Text>{data?.upcomingInstallment?.length || 0} items</Text>
-// </TouchableOpacity>
-
-
-// <TouchableOpacity style={{padding:12, borderWidth:1, borderColor:'#eee', borderRadius:8, marginBottom:8}} onPress={()=>navigation.navigate('UpcomingRenewal')}>
-// <Text style={{fontWeight:'700'}}>Upcoming Renewal</Text>
-// <Text>{data?.upcomingRenewal?.length || 0} items</Text>
-// </TouchableOpacity>
-// </SafeAreaView>
-// )
-// }
 return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f8fc", padding: 18 }}>
       <Text style={{ fontSize: 24, fontWeight: "bold", marginVertical: 18 }}>
@@ -70,9 +48,9 @@ return (
       >
         <Icon name="shield-check" size={36} color="#4092ff" style={{ marginRight: 20 }} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontWeight: "700", fontSize: 16 }}>My Insurance Portfolio</Text>
+          <Text style={{ fontWeight: "700", fontSize: 16 }}>My Portfolio</Text>
           <Text style={{ fontSize: 13, color: "#555" }}>
-            Tap to view details
+            Tap to view details of Insurance / Investments / etc
           </Text>
         </View>
         <Icon name="chevron-right" size={26} color="#aaa" />
@@ -149,7 +127,7 @@ return (
         }}
         onPress={() => navigation.navigate("NewPolicy")}
       >
-        <Icon name="autorenew" size={36} color="#4092ff" style={{ marginRight: 20 }} />
+        <Icon name="add-circle-outline" size={36} color="#4092ff" style={{ marginRight: 20 }} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontWeight: "700", fontSize: 16 }}>Add New Policy</Text>
           <Text style={{ fontSize: 13, color: "#555" }}>

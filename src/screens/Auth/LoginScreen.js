@@ -11,20 +11,49 @@ export default function LoginScreen({ navigation }){
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [showPassword, setShowPassword] = useState(false);
+const [loading, setLoading] = useState(false);
 const auth = useAuth();
 
-
-const onLogin = async ()=>{
-    // fake enable try catch later
-    // await auth.signIn({ role: 'user', name: 'rajesh'});
-    await auth.signIn({ role: 'agent', name: 'rajesh'});
-// try{
-// const res = await api.login({ email, password });
-// if(!res || !res.token) throw new Error('Invalid response');
-// // store token and fetch profile via App's signIn to reuse flows
-// await auth.signIn({ email, password });
-// }catch(e){ Alert.alert('Login failed', e.response?.data?.message || e.message) }
+const onLogin = async () => {
+    setLoading(true);
+    try {
+      await auth.signIn({ email: email.trim(), password: password.trim() });
+      // Optionally: navigation.navigate('DashboardHome');
+    } catch (e) {
+      Alert.alert('Login failed', e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+const onLoginOld = async () => {
+  try {
+  setLoading(true);
+  const response = await fetch('https://dr-wise-ag.onrender.com/api/v1/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim(), password: password.trim() })
+  });
+  const data = await response.json();
+  console.log(email.trim(), password.trim());
+  console.log('Fetch response:', data);
+  // if (!data.data?.token) throw new Error('Invalid response');
+  if (data.success && data.data && data.data.token) {
+    console.log('Login successful, token:', data.data.token);
+  await auth.signIn({ token: data.data.token });
+  // navigation.navigate('DashboardHome'); // enable this if you want auto-navigation
+} else {
+  throw new Error(data.message || 'Invalid response');
 }
+
+} catch (e) {
+  Alert.alert('Login failed', e.message);
+} finally {
+  setLoading(false);
+}
+
+};
+
 
 return (
     <SafeAreaView style={{ flex: 1, padding: 16, justifyContent: 'center', backgroundColor: '#fff' }}>
@@ -69,7 +98,7 @@ return (
       </View>
 
       {/* Sign In Button */}
-      <TouchableOpacity onPress={onLogin} style={{ backgroundColor: '#007bff', borderRadius: 8, padding: 14, marginBottom: 12 }}>
+      <TouchableOpacity onPress={onLogin} disabled={loading} style={{ backgroundColor: '#007bff', borderRadius: 8, padding: 14, marginBottom: 12 }}>
         <Text style={{ color: '#fff', textAlign: 'center', fontSize: 18, fontWeight: '600' }}>Sign In</Text>
       </TouchableOpacity>
 
@@ -87,7 +116,6 @@ return (
       <Text style={{ textAlign: 'center', color: '#666', marginBottom: 4 }}>
         For Enquiry Contact Us: <Text style={{ color: '#007bff' }}>+91999999</Text>
       </Text>
-      <Text style={{ textAlign: 'center', color: '#aaa', fontSize: 12 }}>Version 4.1 (Android 15)</Text>
     </SafeAreaView>
   );
 }

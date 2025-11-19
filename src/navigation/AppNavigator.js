@@ -24,6 +24,7 @@ import AllPoliciesScreen from '../screens/Agent/AllPoliciesScreen';
 import AddPolicyForm from '../screens/Agent/Forms/AddPolicyForm';
 // Common
 import SettingsScreen from '../screens/Common/SettingsScreen';
+import NotificationsScreen from '../screens/Common/NotificationsScreen';
 import InfoScreen from '../screens/Common/InfoScreen';
 import ChangePasswordScreen from '../screens/Common/ChangePasswordScreen';
 import TermsScreen from '../screens/Common/TermsScreen';
@@ -37,14 +38,16 @@ function UserTabs() {
     <Tab.Navigator>
       <Tab.Screen name="DashboardHome" component={UserDashboard} options={{ title: 'Dashboard' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} />
     </Tab.Navigator>
   );
 }
 function AgentTabs() {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="AgentHome" component={AgentDashboard} options={{ title: 'Agent' }} />
+      <Tab.Screen name="AgentHome" component={AgentDashboard} options={{ title: 'Dashboard' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} />
     </Tab.Navigator>
   );
 }
@@ -67,7 +70,7 @@ export default function AppNavigator() {
     );
   }
 
-  if (user.role === 'agent') {
+  if (user.role === 'agent_role') {
     return (
       <Stack.Navigator>
         <Stack.Screen name="AgentMain" component={AgentTabs} options={{ headerShown: false }} />

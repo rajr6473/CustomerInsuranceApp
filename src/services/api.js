@@ -3,19 +3,24 @@ import axios from 'axios';
 
 // Base axios instance - set your baseURL here
 const client = axios.create({
-baseURL: 'https://api.example.com',
+baseURL: 'https://dr-wise-ag.onrender.com',
 timeout: 15000,
 });
 
 
 const api = {
 // Auth
-login: async ({email, password}) => {
-// Replace with your login endpoint
-const res = await client.post('/auth/login', { email, password });
-// Expected: { token }
-return res.data;
-},
+login: async ({ email, password }) => {
+  try {
+    const res = await client.post('/api/v1/auth/login', { email, password });
+    console.log('[DEBUG] login API raw response', res);
+    return res.data;
+  } catch (error) {
+    console.warn('[DEBUG] login API error', error?.response?.data ?? error);
+    throw error; // rethrow to context
+  }
+}
+,
 register: async (payload) => {
 const res = await client.post('/auth/register', payload);
 return res.data;

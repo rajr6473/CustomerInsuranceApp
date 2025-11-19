@@ -7,9 +7,10 @@ import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';  // Ensure this dependency is there.
 
 const POLICY_TYPES = [
-  { label: 'LIC', value: 'LIC' },
-  { label: 'Health', value: 'health' },
-  { label: 'Premium', value: 'premium' },
+  { label: 'LIFE', value: 'Life' },
+  { label: 'Health', value: 'Health' },
+  { label: 'Motor', value: 'Motor' },
+  { label: 'Other', value: 'Other' },
 ];
 
 export default function NewPolicyScreen({ navigation }) {

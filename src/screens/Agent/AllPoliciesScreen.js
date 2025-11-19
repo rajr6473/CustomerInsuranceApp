@@ -43,6 +43,22 @@ const DUMMY_POLICIES = [
     icon: 'medical-bag',
     color: '#34c759',
   },
+  {
+    id: '3',
+    company: 'Insurance Co. Ltd',
+    type: 'wc',
+    policyType: 'Life Insurance',
+    policyNo: '7030003418',
+    client: 'L N ',
+    holder: 'L N ',
+    agent: 'Self',
+    entryDate: '16-12-2024',
+    startDate: '16-12-2024',
+    endDate: '15-12-2025',
+    icon: 'medical-bag',
+    color: '#34c759',
+  },
+  
   // Add more mock policies if needed
 ];
 
@@ -103,92 +119,114 @@ const AllPoliciesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={{fontSize: 22, fontWeight: 'bold', color: '#0076fe', marginLeft: 18, marginTop: 22}}>
-        All Policy
-       </Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabBar}
-        contentContainerStyle={{ paddingHorizontal: 8 }}
+  <Text style={styles.header}>All Policy</Text>
+
+  {/* Tab Bar - improved */}
+  <ScrollView
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.tabBarContainer}
+    style={styles.tabBar}
+  >
+    {TABS.map(tab => (
+      <TouchableOpacity
+        key={tab.value}
+        style={[
+          styles.tab,
+          selectedTab === tab.value ? styles.tabSelected : null
+        ]}
+        onPress={() => setSelectedTab(tab.value)}
+        activeOpacity={0.85}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar}>
-        {TABS.map(tab => (
-            <TouchableOpacity
-            key={tab.value}
-            style={[styles.tab, selectedTab === tab.value && styles.tabSelected]}
-            onPress={() => setSelectedTab(tab.value)}
-            >
-            <Text style={[styles.tabText, selectedTab === tab.value && styles.tabTextSelected]}>
-                {tab.label}
-            </Text>
-            </TouchableOpacity>
-        ))}
-        </ScrollView>
-      </ScrollView>
-      <FlatList
-        data={filteredPolicies}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => <PolicyCard item={item} />}
-        ListEmptyComponent={
-          <Text style={{ textAlign: 'center', margin: 30, color: '#777' }}>No policies found.</Text>
-        }
-        contentContainerStyle={{ padding: 16 }}
-      />
-    </View>
+        <Text style={[
+          styles.tabText,
+          selectedTab === tab.value ? styles.tabTextSelected : null
+        ]} numberOfLines={1} ellipsizeMode="tail">
+          {tab.label}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </ScrollView>
+
+  {/* Policy List */}
+  <FlatList
+    data={filteredPolicies}
+    keyExtractor={item => item.id}
+    renderItem={({item}) => <PolicyCard item={item} />}
+    ListEmptyComponent={
+      <Text style={{ textAlign: 'center', margin: 30, color: '#777' }}>
+        No policies found.
+      </Text>
+    }
+    contentContainerStyle={{ padding: 16 }}
+  />
+</View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fb' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f7fb'
+  },
   header: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#0076fe',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5'
+    marginLeft: 18,
+    marginTop: 22,
+    marginBottom: 10
   },
+  // Tab bar container centers tabs vertically in a row
   tabBar: {
     backgroundColor: 'transparent',
+    marginBottom: 20,
+    maxHeight: 60
+  },
+  tabBarContainer: {
     flexDirection: 'row',
-    paddingVertical: 0,
-    marginBottom: 10,
-    paddingLeft: 10,
+    alignItems: 'center',
+    paddingHorizontal: 8
   },
   tab: {
-    marginRight: 10,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 16,
+    marginRight: 12,
+    paddingHorizontal: 20, // More space, but not huge
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: '#f5f7fb',
     borderWidth: 1,
     borderColor: '#e5e5e5',
-    minWidth: 100,
+    minWidth: 120,
+    maxWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   tabSelected: {
     backgroundColor: '#fff',
     borderColor: '#0076fe',
     borderWidth: 2,
+    shadowColor: '#0076fe',
+    shadowOpacity: 0.1,
+    shadowRadius: 2
   },
   tabText: {
     color: '#333',
     fontWeight: 'bold',
     fontSize: 15,
     textAlign: 'center',
+    flexShrink: 1,
+    ellipsizeMode: 'tail',
+    numberOfLines: 1
   },
   tabTextSelected: {
-    color: '#0076fe',
-    fontWeight: 'bold',
+    color: '#0076fe'
   },
   policyCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 18,
-    // Card shadow for iOS/Android
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,

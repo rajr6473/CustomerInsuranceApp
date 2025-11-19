@@ -1,47 +1,56 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useAuth } from '../../context/AuthContext'; // adjust relative path as needed
+
 
 // Example API function - replace with your actual API endpoints.
-const fetchDashboardData = async () => {
-  // Replace these URLs and data keys as per your backend.
-  const dashboardRes = await fetch("https://yourapi.com/dashboard"); // Returns { agentName, commission }
-  const dashData = await dashboardRes.json();
+// const fetchDashboardData = async () => {
+//   // Replace these URLs and data keys as per your backend.
+//   const dashboardRes = await fetch("https://yourapi.com/dashboard"); // Returns { agentName, commission }
+//   const dashData = await dashboardRes.json();
 
-  const customersRes = await fetch("https://yourapi.com/customers"); // Returns { count }
-  const customersData = await customersRes.json();
+//   const customersRes = await fetch("https://yourapi.com/customers"); // Returns { count }
+//   const customersData = await customersRes.json();
 
-  const policiesRes = await fetch("https://yourapi.com/policies"); // Returns { count }
-  const policiesData = await policiesRes.json();
+//   const policiesRes = await fetch("https://yourapi.com/policies"); // Returns { count }
+//   const policiesData = await policiesRes.json();
 
-  return {
-    agentName: dashData.agentName,
-    commission: dashData.commission,
-    customerCount: customersData.count,
-    policyCount: policiesData.count,
-  };
-};
+//   return {
+//     agentName: dashData.agentName,
+//     commission: dashData.commission,
+//     customerCount: customersData.count,
+//     policyCount: policiesData.count,
+//   };
+// };
 
 export default function AgentDashboard({ navigation }) {
-//   const [data, setData] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Dummy / placeholder data
-  const [data] = useState({
-    agentName: "Agent name",
-    commission: 15000,
-    customerCount: 12,
-    policyCount: 27,
-  });
-
+  // const [data] = useState({
+  //   agentName: "Agent name",
+  //   commission: 15000,
+  //   customerCount: 12,
+  //   policyCount: 27,
+  // });
+  const auth = useAuth();
   useEffect(() => {
-    fetchDashboardData()
-      .then(res => {
-        setData(res);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    console.log('[AgentDashboard] User:', auth.user);
+    console.log('[AgentDashboard] Token:', auth.getToken());
+    setData(auth.user)
+    // (Optional: fetch dashboard data here)
   }, []);
+
+  // useEffect(() => {
+  //   fetchDashboardData()
+  //     .then(res => {
+  //       setData(res);
+  //       setLoading(false);
+  //     })
+  //     .catch(() => setLoading(false));
+  // }, []);
 
   if (loading) {
     return (
@@ -56,7 +65,7 @@ export default function AgentDashboard({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.dashboardTitle}>Agent Dashboard</Text>
         <Text style={styles.welcome}>Welcome back,</Text>
-        <Text style={styles.agentName}>{data.agentName}</Text>
+        <Text style={styles.agentName}>{data.full_name}</Text>
       </View>
 
       <View style={styles.section}>
