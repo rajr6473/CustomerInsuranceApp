@@ -7,6 +7,9 @@ import { useAuth } from '../../context/AuthContext'; // adjust relative path as 
 
 export default function SettingsScreen({ navigation }){
 const auth = useAuth();
+const { user, getToken } = useAuth();
+
+const displayName = user?.full_name || 'Customer';
 
 return (
     <SafeAreaView style={{flex:1, backgroundColor:'#f7f7f7'}}>
@@ -19,7 +22,7 @@ return (
             <Text style={styles.avatarEmoji}>🧑‍💼</Text>
             </View>
         }
-        <Text style={styles.profileName}>Customer Name</Text>
+        <Text style={styles.profileName}>{displayName}</Text>
         {/* Add below line for subtitle if required */}
         {/* <Text style={styles.profileSubtitle}>Agent</Text> */}
       </View>

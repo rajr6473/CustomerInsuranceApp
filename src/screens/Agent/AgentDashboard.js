@@ -39,7 +39,8 @@ export default function AgentDashboard({ navigation }) {
   useEffect(() => {
     console.log('[AgentDashboard] User:', auth.user);
     console.log('[AgentDashboard] Token:', auth.getToken());
-    setData(auth.user)
+    setData(auth.user);
+    setLoading(false);
     // (Optional: fetch dashboard data here)
   }, []);
 

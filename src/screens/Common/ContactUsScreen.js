@@ -1,25 +1,69 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+// src/screens/Common/ContactUsScreen.js
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-// import MaterialICommunitycons from 'react-native-vector-icons/MaterialCommunityIcons';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ContactUsScreen() {
+  const { getToken } = useAuth();
+  const [contact, setContact] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadContact = async () => {
+      try {
+        const token = await getToken();
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+        const data = await api.getContact(token);
+        setContact(data);
+      } catch (err) {
+        console.log('[DEBUG] loadContact error', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadContact();
+  }, [getToken]);
+
   const agent = {
-    name: 'ABC',
-    phone: '+9199999999',
-    email: 'abc@gmail.com',
-    address: '123, Agent Street, Bengaluru'
+    name: contact?.agent_name || 'Contact ABC',
+    phone: contact?.agent_mobile || '+919999999999',
+    email: contact?.agent_email || 'abc@gmail.com',
+    address: contact?.agent_address || '123, Agent Street, Bengaluru',
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator size="large" color="#3186ce" />
+          <Text style={styles.loaderText}>Loading contact details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.headerCard}>
-          <Text style={styles.headerText}>Contact {agent.name}</Text>
+          <Text style={styles.headerText}>{agent.name}</Text>
           <Text style={styles.headerSubText}>Your agent is here to help you</Text>
         </View>
 
+        {/* Mobile section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Icon name="phone" size={26} color="#38b000" style={styles.sectionIcon} />
@@ -39,6 +83,7 @@ export default function ContactUsScreen() {
           </View>
         </View>
 
+        {/* Email section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Icon name="email" size={26} color="#3186ce" style={styles.sectionIcon} />
@@ -53,6 +98,7 @@ export default function ContactUsScreen() {
           </View>
         </View>
 
+        {/* Address section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Icon name="location-on" size={26} color="#f07a08" style={styles.sectionIcon} />
@@ -66,6 +112,7 @@ export default function ContactUsScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f6f8fb' },
@@ -114,4 +161,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 14,
   },
+  loaderWrap: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+loaderText: {
+  marginTop: 8,
+  fontSize: 14,
+  color: '#64748b',
+},
+
 });

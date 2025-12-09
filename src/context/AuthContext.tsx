@@ -56,8 +56,8 @@ const signInold = async (credentials: { email: string; password: string }) => {
   setLoading(false)
   const res = await api.login(credentials); // { token: '...' }
   if (!res?.token) throw new Error('Login failed');
-  await AsyncStorage.setItem('token', res.token);
-  const profile = await api.getProfile(res.token);
+  await AsyncStorage.setItem('token', res.data.token);
+  const profile = await api.getProfile(res.data.token);
   setUser(profile);
 };
 
@@ -74,10 +74,11 @@ const signIn = async (credentials: { email: string; password: string }): Promise
   await AsyncStorage.setItem('token', token);
 
   const userDetails = {
-    ...res.data.user,
-    role: res.data.user.role,
-    name: res.data.user.full_name || res.data.user.name,
-    email: res.data.user.email,
+    ...res.data,
+    role: res.data.role,
+    // role: 'user', // temporarily hardcode role to 'user'
+    name: res.data.username,
+    email: res.data.email,
   };
   setUser(userDetails);
 
@@ -101,8 +102,11 @@ const signIn = async (credentials: { email: string; password: string }): Promise
     setUser(null);
   };
 
-  const getToken = async () => await AsyncStorage.getItem('token');
-
+const getToken = async () => {
+  const t = await AsyncStorage.getItem('token');
+  console.log('[DEBUG] getToken', t);
+  return t;
+};
   return (
     <AuthContext.Provider value={{ user, loading, signIn, signOut, getToken }}>
       {children}
