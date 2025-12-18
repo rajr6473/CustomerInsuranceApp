@@ -1,16 +1,38 @@
+// src/screens/Agent/Forms/JS/AddPolicyForm.js
+import React from 'react';
+import { useNavigation } from '@react-navigation/native';
+
 import LifeInsuranceForm from './LifeInsuranceForm';
 import HealthInsuranceForm from './HealthInsuranceForm';
-import MotorInsuranceForm from './MotorInsuranceForm';
-import OtherInsuranceForm from './OtherInsuranceForm';
 
 function AddPolicyForm({ route }) {
-  const { policyType } = route.params;
+  const navigation = useNavigation();
+  const { policyType } = route.params || {};
   console.log('Policy Type:', policyType);
-  if (policyType === "life") return <LifeInsuranceForm route={route} />;
-  if (policyType === 'health') return <HealthInsuranceForm route={route} />;
-  if (policyType === 'motor') return <MotorInsuranceForm route={route} />;
-  if (policyType === 'other') return <OtherInsuranceForm route={route} />;
-  return <OtherInsuranceForm />;
+
+  // Common cancel / success handlers for all policy forms
+  const handleCancel = () => {
+    navigation.goBack();                // or navigation.navigate('AgentMain')
+  };
+
+  const handleSuccess = () => {
+    navigation.navigate('AgentMain');   // dashboard after successful create
+  };
+
+  if (policyType === 'life') {
+    return (
+      <LifeInsuranceForm
+        onCancel={handleCancel}
+        onSuccess={handleSuccess}
+      />
+    );
+  }
+    return (
+      <HealthInsuranceForm
+        onCancel={handleCancel}
+        onSuccess={handleSuccess}
+      />
+    );
 }
 
 export default AddPolicyForm;

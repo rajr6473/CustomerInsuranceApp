@@ -1,502 +1,572 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+// src/screens/Agent/JS/AddCustomerScreen.js
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {launchImageLibrary} from 'react-native-image-picker';
+import api from '../../services/api';
+import {useAuth} from '../../context/AuthContext';
+import {Picker} from '@react-native-picker/picker';
 
 
-
-const states = [
-  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa",
-  "Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala",
-  "Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland",
-  "Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura",
-  "Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu & Kashmir","Ladakh"
+const genders = ['male', 'female', 'other'];
+// put this ABOVE the component
+const INDIA_STATES = [
+  'Andaman and Nicobar Islands','Andhra Pradesh','Arunachal Pradesh','Assam',
+  'Bihar','Chandigarh','Chhattisgarh',
+  'Dadra and Nagar Haveli and Daman and Diu','Delhi',
+  'Goa','Gujarat','Haryana','Himachal Pradesh','Jammu and Kashmir','Jharkhand',
+  'Karnataka','Kerala','Ladakh','Lakshadweep','Madhya Pradesh','Maharashtra',
+  'Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Puducherry','Punjab',
+  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
+  'Uttarakhand','West Bengal',
 ];
+const maritalStatuses = ['single', 'married', 'divorced'];
 
-export default function AddCustomerScreen(props) {
-  const [customerType, setCustomerType] = useState('Individual');
-    const navigation = props.navigation || useNavigation(); // Fallback if not passed
-  
-  // Shared states
-  const [mobile, setMobile] = useState('');
-  const [email, setEmail] = useState('');
-  const [state, setState] = useState('');
-  const [address, setAddress] = useState('');
-  const [annualIncome, setAnnualIncome] = useState('');
-  const [pan, setPan] = useState('');
-  const [gst, setGst] = useState('');
-  // const [profileImage, setProfileImage] = useState(null); // Handle with your image picker logic
-  const [documents, setDocuments] = useState([]);
-  const [additionalNote, setAdditionalNote] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function AddCustomerScreen() {
+  const navigation = useNavigation();
+  const {getToken} = useAuth();
 
-  // Individual specific states
-  const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [birthDate, setBirthDate] = useState(null);
-  const [birthPlace, setBirthPlace] = useState('');
-  const [gender, setGender] = useState('');
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [education, setEducation] = useState('');
-  const [maritalStatus, setMaritalStatus] = useState('');
-  const [businessJob, setBusinessJob] = useState('');
-  const [businessJobName, setBusinessJobName] = useState('');
-  const [dutyType, setDutyType] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [attachments, setAttachments] = useState([]);
-  
+  const [customerType, setCustomerType] = useState('individual');
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
 
-  
-  // Corporate specific states
-  const [companyName, setCompanyName] = useState('');
 
-  const handleCancel = () => {
-      navigation.navigate('AgentMain');
-    };
-  
-    const pickAttachmentsHandler = async () => {
-        try {
-          const results = await pickMultiple({ type: [types.allFiles] });
-          const uris = new Set(attachments.map(a => a.uri));
-          const merged = [...attachments];
-          results.forEach(file => {
-            if (!uris.has(file.uri)) {
-              merged.push(file);
-              uris.add(file.uri);
-            }
-          });
-          setAttachments(merged);
-        } catch (err) {
-          Alert.alert('Error', 'Could not pick attachment.');
-        }
-      };
-  
-    const removeAttachment = uri => {
-      setAttachments(prev => prev.filter(a => a.uri !== uri));
-    };
-  
-    const [profilePic, setProfilePic] = useState(null);
-  
-  const pickProfilePicHandler = async () => {
-    try {
-      // Use ImagePicker launchImageLibraryAsync for expo, or similar for bare RN:
-      const result = await launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
-      if (!result.cancelled) {
-        setProfilePic(result.uri);
-      }
-    } catch (e) {
-      Alert.alert('Error', 'Could not pick profile picture.');
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    company_name: '',
+    email: '',
+    mobile: '',
+    gender: '',
+    birth_date: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    pan_no: '',
+    gst_no: '',
+    occupation: '',
+    annual_income: '',
+    marital_status: '',
+    image_url: '',
+    documents: [],
+  });
+
+  const handleChange = (field, value) =>
+    setForm(prev => ({...prev, [field]: value}));
+
+  const pickProfileImage = async () => {
+    const res = await launchImageLibrary({mediaType: 'photo'});
+    if (res.assets && res.assets[0]) {
+      handleChange('image_url', res.assets[0].uri);
     }
   };
-  
-  
-  const onSubmit = async () => {
+
+  const addDocument = async () => {
+    const res = await launchImageLibrary({mediaType: 'photo'});
+    if (res.assets && res.assets[0]) {
+      const doc = {
+        document_type: 'other',
+        document_file: res.assets[0].uri, // later change to base64 if backend needs
+      };
+      handleChange('documents', [...form.documents, doc]);
+    }
+  };
+
+  const validate = () => {
+  const e = {};
+
+  if (customerType === 'individual') {
+    if (!form.first_name.trim()) e.first_name = 'First name is required';
+    if (!form.last_name.trim()) e.last_name = 'Last name is required';
+  } else {
+    if (!form.company_name.trim()) e.company_name = 'Company name is required';
+  }
+
+  if (!form.mobile.trim()) e.mobile = 'Mobile is required';
+  if (!form.email.trim()) e.email = 'Email is required';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+    e.email = 'Enter a valid email';
+
+  if (!form.state) e.state = 'State is required';
+  setErrors(e);
+  return Object.keys(e).length === 0;
+};
+
+
+  const handleCancel = () => {
+    navigation.navigate('AgentMain');
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
     try {
-      let payload;
-      if (customerType === 'Individual') {
-        payload = {
-          customerType,
-          firstName,
-          middleName,
-          lastName,
-          mobile,
-          email,
-          state,
-          address,
-          birthDate: birthDate.toISOString(),
-          birthPlace,
-          gender,
-          height,
-          weight,
-          education,
-          maritalStatus,
-          businessJob,
-          businessJobName,
-          dutyType,
-          annualIncome,
-          pan,
-          gst,
-          // profileImage,
-          documents,
-          additionalNote
-        };
-      } else {
-        payload = {
-          customerType,
-          companyName,
-          mobile,
-          email,
-          state,
-          address,
-          dutyType,
-          annualIncome,
-          pan,
-          gst,
-          // profileImage,
-          documents,
-          additionalNote
-        };
-      }
+      setLoadingSubmit(true);
+      const token = await getToken();
 
-      // Call you API here
-      await api.addCustomer(payload);
+      const payload = {
+        ...form,
+        customer_type: customerType,
+      };
 
-      Alert.alert('Success', 'Customer added!');
-      // Clear all fields if necessary
+      const res = await api.addCustomer(token, payload);
+      console.log('[AddCustomerScreen] addCustomer result:', res);
 
-    } catch (e) {
-      Alert.alert('Error', e.response?.data?.message ?? 'Error occurred');
+      setLoadingSubmit(false);
+      setSuccessVisible(true);
+
+      setTimeout(() => {
+        setSuccessVisible(false);
+        navigation.navigate('AgentMain');
+      }, 3000);
+    } catch (err) {
+      console.log('[AddCustomerScreen] addCustomer error:', err.message);
+      setLoadingSubmit(false);
+      // optional: show Alert here
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <SafeAreaView style={{ flex: 1, padding: 16 }}>
-        <Text style={{ fontSize: 22, fontWeight: '700', marginBottom: 16 }}>Create Customer</Text>
+    <LinearGradient
+      colors={['#003B5C', '#007B8A']}
+      style={styles.gradient}>
+      <View style={styles.overlay}>
+        <ScrollView
+          contentContainerStyle={styles.card}
+          showsVerticalScrollIndicator={false}>
+          <Text style={styles.title}>Add Customer</Text>
+          <Text style={styles.subtitle}>
+            Create a new customer profile
+          </Text>
 
-        {/* Radio Buttons */}
-        <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-          <TouchableOpacity onPress={() =>{setCustomerType('Individual');
-            setState(''); setBirthDate(null);}}
-            style={{ marginRight: 16 }}>
-            <Text style={{ color: customerType === 'Individual' ? '#007bff' : '#000' }}>
-              ⬤ Individual
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {setCustomerType('Corporate');
-            setState('');}
-          }>
-            <Text style={{ color: customerType === 'Corporate' ? '#007bff' : '#000' }}>
-              ⬤ Corporate
-            </Text>
-          </TouchableOpacity>
-        </View>
+          {/* customer type */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Customer Type</Text>
+            <View style={styles.radioRow}>
+              {['individual', 'corporate'].map(type => (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.radioChip,
+                    customerType === type && styles.radioChipActive,
+                  ]}
+                  onPress={() => setCustomerType(type)}>
+                  <Icon
+                    name={type === 'individual' ? 'account-circle' : 'domain'}
+                    size={20}
+                    color={customerType === type ? '#fff' : '#003B5C'}
+                  />
+                  <Text
+                    style={[
+                      styles.radioText,
+                      customerType === type && styles.radioTextActive,
+                    ]}>
+                    {type === 'individual' ? 'Individual' : 'Corporate'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
-        {/* Conditional Form Rendering */}
-        {customerType === 'Individual' ? (
-          <View>
-            <Text style={{ fontWeight: '500', marginBottom: 8 }}>Personal Detail</Text>
-            <TextInput placeholder="First Name*" value={firstName} onChangeText={setFirstName} style={inputStyle} />
-            <TextInput placeholder="Middle Name" value={middleName} onChangeText={setMiddleName} style={inputStyle} />
-            <TextInput placeholder="Last Name" value={lastName} onChangeText={setLastName} style={inputStyle} />
-            <TextInput placeholder="Mobile Number*" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" style={inputStyle} />
-            <TextInput placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" style={inputStyle} />
-            <View style={{
-              borderWidth: 1,
-              borderColor: '#ddd',
-              borderRadius: 6,
-              marginBottom: 8,
-              height: 56,             // Slightly increased
-              justifyContent: 'center', // Ensures value is vertically centered
-            }}>
+          {/* name / company */}
+          <View style={styles.row}>
+              <View style={[styles.inputWrapper, {marginRight: 8}]}>
+                <Text style={styles.label}>First name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.first_name}
+                  onChangeText={t => {
+                handleChange('first_name', t);
+                if (errors.first_name) setErrors(prev => ({...prev, first_name: ''}));
+              }}
+            />
+            {errors.first_name ? <Text style={styles.errorText}>{errors.first_name}</Text> : null}
+              </View>
+              <View style={[styles.inputWrapper, {marginLeft: 8}]}>
+                <Text style={styles.label}>Last name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.last_name}
+                  onChangeText={t => {
+                handleChange('last_name', t);
+                if (errors.last_name) setErrors(prev => ({...prev, last_name: ''}));
+              }}
+            />
+            {errors.last_name ? <Text style={styles.errorText}>{errors.last_name}</Text> : null}
+              </View>
+            </View>
+          {customerType !='individual' && (
+            <View style={styles.section}>
+              <Text style={styles.label}>Company name</Text>
+              <TextInput
+                style={styles.input}
+                value={form.company_name}
+                onChangeText={t => {
+                handleChange('company_name', t);
+                if (errors.company_name) setErrors(prev => ({...prev, company_name: ''}));
+              }}
+            />
+            {errors.company_name ? <Text style={styles.errorText}>{errors.company_name}</Text> : null}
+            </View>
+          )}
+
+          {/* email, mobile */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={form.email}
+              onChangeText={t => {
+                handleChange('email', t);
+                if (errors.email) setErrors(prev => ({...prev, email: ''}));
+              }}
+              keyboardType="email-address"
+            />
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          </View>
+
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Mobile</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="phone-pad"
+              value={form.mobile}
+              onChangeText={t => {
+                handleChange('mobile', t);
+                if (errors.mobile) setErrors(prev => ({...prev, mobile: ''}));
+              }}
+            />
+            {errors.mobile ? <Text style={styles.errorText}>{errors.mobile}</Text> : null}
+          </View>
+
+          {/* gender chips */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Gender</Text>
+            <View style={styles.dropdownRow}>
+              {genders.map(g => (
+                <TouchableOpacity
+                  key={g}
+                  style={[
+                    styles.dropdownChip,
+                    form.gender === g && styles.dropdownChipActive,
+                  ]}
+                  onPress={() => handleChange('gender', g)}>
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      form.gender === g && styles.dropdownTextActive,
+                    ]}>
+                    {g}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* state */}
+          <View style={styles.section}>
+            <Text style={styles.label}>State</Text>
+            <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={state}
-                onValueChange={setState}
-                style={{
-                  height: 56,           // Match parent for no cropping
-                  color: '#222',
-                  backgroundColor: 'transparent'
-                }}
-                dropdownIconColor="#222" // if RN version supports it
+                selectedValue={form.state}
+                onValueChange={val => handleChange('state', val)}
+                style={styles.picker}
               >
-                <Picker.Item label="Select State" value="" />
-                {states.map((stateName, i) => (
-                  <Picker.Item label={stateName} value={stateName} key={i} />
+                <Picker.Item label="Select state" value="" />
+                {INDIA_STATES.map(s => (
+                  <Picker.Item key={s} label={s} value={s} />
                 ))}
               </Picker>
             </View>
-            <TextInput placeholder="Address" value={address} onChangeText={setAddress} style={inputStyle} />
-            {/* Add Pickers/Inputs for Gender, Height, Weight, Education, Marital Status, etc. */}
-            {/* Add Date Picker for Birth Date */}
-            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={inputStyle}>
-              <Text style={{ color: birthDate ? "#000" : "#bbb" }}>
-                {birthDate ? birthDate.toLocaleDateString() : "Select Birth Date"}
+            {errors.state ? <Text style={styles.errorText}>{errors.state}</Text> : null}
+          </View>
+
+
+          {/* marital status */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Marital status</Text>
+            <View style={styles.dropdownRow}>
+              {maritalStatuses.map(m => (
+                <TouchableOpacity
+                  key={m}
+                  style={[
+                    styles.dropdownChip,
+                    form.marital_status === m &&
+                      styles.dropdownChipActive,
+                  ]}
+                  onPress={() => handleChange('marital_status', m)}>
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      form.marital_status === m &&
+                        styles.dropdownTextActive,
+                    ]}>
+                    {m}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* address */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Address</Text>
+            <TextInput
+              style={[styles.input, {height: 70}]}
+              multiline
+              value={form.address}
+              onChangeText={t => handleChange('address', t)}
+            />
+          </View>
+
+          {/* profile photo */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Profile photo</Text>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={pickProfileImage}>
+              <Icon name="camera" size={18} color="#fff" />
+              <Text style={styles.uploadText}>
+                {form.image_url ? 'Change photo' : 'Upload from gallery'}
               </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={birthDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) setBirthDate(selectedDate);
-                }}
-              />
+          </View>
+
+          {/* documents */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Documents</Text>
+            <TouchableOpacity
+              style={styles.uploadButtonOutline}
+              onPress={addDocument}>
+              <Icon name="file-upload" size={18} color="#007BFF" />
+              <Text style={styles.uploadTextOutline}>Add document</Text>
+            </TouchableOpacity>
+            {form.documents.length > 0 && (
+              <Text style={styles.helperText}>
+                {form.documents.length} document(s) attached
+              </Text>
             )}
-            <TextInput placeholder="Birth Place" value={birthPlace} onChangeText={setBirthPlace} style={inputStyle} />
-            {/* Business/Job Section */}
-            <Text style={{ fontWeight: '500', color: '#007bff', marginTop: 16 }}>Business/Job</Text>
-            <TextInput placeholder="Name of Business/Job" value={businessJobName} onChangeText={setBusinessJobName} style={inputStyle} />
-            <TextInput placeholder="Type of Duty" value={dutyType} onChangeText={setDutyType} style={inputStyle} />
-            <TextInput placeholder="Annual Income" value={annualIncome} onChangeText={setAnnualIncome} style={inputStyle} />
-            <TextInput placeholder="Pan No." value={pan} onChangeText={setPan} style={inputStyle} />
-            <TextInput placeholder="GST No." value={gst} onChangeText={setGst} style={inputStyle} />
-            {/* Profile Image and Document upload logic goes here */}
-            <TextInput placeholder="Additional Note" value={additionalNote} onChangeText={setAdditionalNote} style={inputStyle} />
           </View>
-        ) : (
-          <View>
-            <Text style={{ fontWeight: '500', marginBottom: 8 }}>Corporate Details</Text>
-            <TextInput placeholder="Company Name*" value={companyName} onChangeText={setCompanyName} style={inputStyle} />
-            <TextInput placeholder="Mobile Number" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" style={inputStyle} />
-            <TextInput placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" style={inputStyle} />
-            <View style={{
-              borderWidth: 1,
-              borderColor: '#ddd',
-              borderRadius: 6,
-              marginBottom: 8,
-              height: 56,             // Slightly increased
-              justifyContent: 'center', // Ensures value is vertically centered
-            }}>
-              <Picker
-                selectedValue={state}
-                onValueChange={setState}
-                style={{
-                  height: 56,           // Match parent for no cropping
-                  color: '#222',
-                  backgroundColor: 'transparent'
-                }}
-                dropdownIconColor="#222" // if RN version supports it
-              >
-                <Picker.Item label="Select State" value="" />
-                {states.map((stateName, i) => (
-                  <Picker.Item label={stateName} value={stateName} key={i} />
-                ))}
-              </Picker>
+
+          {/* buttons */}
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleCancel}>
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleSubmit}
+              disabled={loadingSubmit}>
+              {loadingSubmit ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Submit</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+      {apiError ? <Text style={styles.apiErrorText}>{apiError}</Text> : null}        
+      {/* success popup */}
+      <Modal transparent visible={successVisible} animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrapper}>
+              <Icon name="check" size={30} color="#fff" />
             </View>
-            <TextInput placeholder="Address" value={address} onChangeText={setAddress} style={inputStyle} />
-            <TextInput placeholder="Type of Duty" value={dutyType} onChangeText={setDutyType} style={inputStyle} />
-            <TextInput placeholder="Annual Income" value={annualIncome} onChangeText={setAnnualIncome} style={inputStyle} />
-            <TextInput placeholder="Pan No." value={pan} onChangeText={setPan} style={inputStyle} />
-            <TextInput placeholder="GST No." value={gst} onChangeText={setGst} style={inputStyle} />
-            {/* Profile Image and Document upload logic goes here */}
-            <TextInput placeholder="Additional Note" value={additionalNote} onChangeText={setAdditionalNote} style={inputStyle} />
+            <Text style={styles.modalTitle}>Customer created</Text>
+            <Text style={styles.modalMessage}>
+              Customer created successfully.
+            </Text>
           </View>
-        )}
-
-        {/* <TouchableOpacity onPress={onSubmit} style={{
-          backgroundColor: "#007bff",
-          padding: 15,
-          borderRadius: 8,
-          marginTop: 20
-        }}>
-          <Text style={{ color: "#fff", textAlign: "center", fontWeight: '700' }}>Save</Text>
-        </TouchableOpacity> */}
-       <View style={{ alignItems: 'center', marginBottom: 28 }}>
-        <View
-          style={{
-            width: 90,
-            height: 90,
-            borderRadius: 45,
-            backgroundColor: '#e0e0e0',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 8,
-            overflow: 'hidden',
-            borderWidth: 2,
-            borderColor: '#cfcfcf',
-          }}>
-          {profilePic ? (
-            <Image source={{ uri: profilePic }} style={{ width: 90, height: 90 }} />
-          ) : (
-            <Text style={{ color: '#666' }}>No Photo</Text>
-          )}
         </View>
-        <TouchableOpacity onPress={pickProfilePicHandler}>
-          <Text style={{ color: '#007bff', fontWeight: '500', fontSize: 15 }}>
-            Upload Profile Photo
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Attachments Section */}
-      <View style={{ marginBottom: 28 }}>
-        <Text style={styles.label}>Attachments</Text>
-        <TouchableOpacity
-          style={styles.uploadBtn}
-          onPress={pickAttachmentsHandler}
-          activeOpacity={0.7}>
-          <Text style={styles.uploadBtnText}>Select Files</Text>
-        </TouchableOpacity>
-        {attachments && attachments.length > 0 && (
-          <View style={{ marginTop: 12 }}>
-            {attachments.map(item => renderAttachment(item))}
-          </View>
-        )}
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.cancelBtn]}
-          onPress={handleCancel}
-          disabled={loading}>
-          <Text style={styles.cancelBtnText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            styles.submitBtn,
-            loading && { opacity: 0.6 }
-          ]}
-          onPress={onSubmit}
-          disabled={loading}>
-          <Text style={styles.submitBtnText}>Submit</Text>
-        </TouchableOpacity>
-      </View>
-      </SafeAreaView>
-    </ScrollView>
+      </Modal>
+    </LinearGradient>
   );
 }
 
-const inputStyle = {
-  borderWidth: 1,
-  borderColor: "#ddd",
-  padding: 10,
-  marginBottom: 8,
-  borderRadius: 6
-};
-const formStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 24 },
-  title: { fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 16, borderRadius: 8 },
-  button: { backgroundColor: '#007bff', padding: 16, borderRadius: 8, marginTop: 16, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, alignItems: 'center', backgroundColor: '#f7f9fc' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 16, color: '#0f172a' },
-  input: {
-    width: '100%',
-    backgroundColor: '#fff',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e6eef8',
-    fontSize: 15,
-    color: '#0f172a',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
+  gradient: {flex: 1},
+  overlay: {flex: 1, padding: 16},
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderRadius: 24,
+    padding: 20,
   },
-  textArea: { textAlignVertical: 'top', minHeight: 110 },
-  
-  attachmentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#eef2ff',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 8,
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#003B5C',
+    textAlign: 'center',
   },
-  attachmentName: { flex: 1, marginRight: 8, color: '#0f172a' },
-  removeBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    backgroundColor: '#f97316',
-    borderRadius: 8,
-  },
-  removeBtnText: { color: '#fff', fontWeight: '600' },
-  submitBtn: {
-    width: '100%',
-    marginTop: 20,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#0ea5e9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  smallText: { marginTop: 12, color: '#475569', fontSize: 13 },
-  button: {
-  flex: 1,
-  height: 44,
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 22,
-  marginHorizontal: 4,
-  elevation: 2,
-  minWidth: 100,
-  maxWidth: 170,
-},
-
-
-  button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 8,
-    minWidth: 100,
-    alignItems: 'center'
-  },
-  label: {
-    fontWeight: '500',
-    marginBottom: 10,
-    fontSize: 16,
-    color: '#334155',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 24,
-    marginBottom: 24,
-    paddingHorizontal: 8,
-  },
-  actionBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginHorizontal: 8,
-    borderRadius: 10,
-    elevation: 1,
-  },
-  submitBtn: {
-    backgroundColor: '#007bff',
-  },
-  submitBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-    letterSpacing: 0.5,
-  },
-  cancelBtn: {
-    backgroundColor: '#f3f3f3',
-    borderWidth: 1,
-    borderColor: '#c0c0c0',
-  },
-  cancelBtnText: {
-    color: '#333',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  uploadBtn: {
-    backgroundColor: '#eef6ff',
-    borderColor: '#007bff',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    alignSelf: 'flex-start',
+  subtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    textAlign: 'center',
+    marginTop: 4,
     marginBottom: 16,
   },
-  uploadBtnText: {
-    color: '#007bff',
-    fontWeight: '500',
-    fontSize: 15,
+  section: {marginBottom: 14},
+  label: {fontSize: 13, fontWeight: '600', color: '#445', marginBottom: 4},
+  input: {
+    borderWidth: 1,
+    borderColor: '#dde3ea',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    backgroundColor: '#f9fbff',
   },
+  row: {flexDirection: 'row', marginBottom: 14},
+  inputWrapper: {flex: 1},
+  radioRow: {flexDirection: 'row', marginTop: 6},
+  radioChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#c7d4e5',
+    marginRight: 10,
+    backgroundColor: '#f5f7fb',
+  },
+  radioChipActive: {
+    backgroundColor: '#007BFF',
+    borderColor: '#007BFF',
+  },
+  radioText: {marginLeft: 6, color: '#003B5C', fontSize: 13},
+  radioTextActive: {color: '#fff'},
+  dropdownRow: {flexDirection: 'row', flexWrap: 'wrap'},
+  dropdownRowWrap: {flexDirection: 'row', flexWrap: 'wrap'},
+  dropdownChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#c7d4e5',
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  dropdownChipActive: {
+    backgroundColor: '#00A0B5',
+    borderColor: '#00A0B5',
+  },
+  dropdownText: {fontSize: 12, color: '#445'},
+  dropdownTextActive: {color: '#fff'},
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007BFF',
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignSelf: 'flex-start',
+  },
+  uploadText: {color: '#fff', fontSize: 13, marginLeft: 8},
+  uploadButtonOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#007BFF',
+    alignSelf: 'flex-start',
+  },
+  uploadTextOutline: {
+    color: '#007BFF',
+    fontSize: 13,
+    marginLeft: 6,
+  },
+  helperText: {fontSize: 12, color: '#16a34a', marginTop: 4},
+  actionsRow: {flexDirection: 'row', marginTop: 10},
+  secondaryButton: {
+    flex: 1,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#c7d4e5',
+    paddingVertical: 12,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {color: '#003B5C', fontWeight: '600'},
+  primaryButton: {
+    flex: 1,
+    borderRadius: 999,
+    paddingVertical: 12,
+    marginLeft: 8,
+    alignItems: 'center',
+    backgroundColor: '#00A0B5',
+  },
+  primaryButtonText: {color: '#fff', fontWeight: '600'},
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    paddingVertical: 24,
+    paddingHorizontal: 22,
+    borderRadius: 18,
+    alignItems: 'center',
+    width: '75%',
+  },
+  modalIconWrapper: {
+    backgroundColor: '#22c55e',
+    borderRadius: 999,
+    padding: 12,
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  modalMessage: {
+    fontSize: 13,
+    color: '#4b5563',
+    textAlign: 'center',
+  },
+  errorText: {
+  marginTop: 4,
+  color: '#dc2626',
+  fontSize: 12,
+},
+apiErrorText: {
+  marginTop: 10,
+  color: '#b91c1c',
+  fontSize: 13,
+  textAlign: 'center',
+},
+pickerWrapper: {
+  borderWidth: 1,
+  borderColor: '#dde3ea',
+  borderRadius: 10,
+  marginBottom: 8,
+  overflow: 'hidden',
+  backgroundColor: '#f9fbff',
+},
+// picker: {height: 44},
 
 });

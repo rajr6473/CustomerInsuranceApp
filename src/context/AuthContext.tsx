@@ -1,15 +1,16 @@
 // src/context/AuthContext.tsx
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
+import Toast from 'react-native-toast-message';
 
 type User = {
   id?: string;
-  name?: string;
+  name1?: string;
   email?: string;
   role?: 'user' | 'agent' | string;
-  // add other fields returned by your profile API
 } | null;
 
 type AuthContextType = {
@@ -22,7 +23,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
   return ctx;
@@ -30,8 +31,9 @@ export const useAuth = (): AuthContextType => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);   // used for restore + API calls
 
+  // restore token on app start
   useEffect(() => {
     const restore = async () => {
       try {
@@ -49,52 +51,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     restore();
   }, []);
 
-const signInold = async (credentials: { email: string; password: string }) => {
-  // enable fake <logic 
-  // setUser({ role: 'user', name: credentials.email});
-  // setUser({ role: 'agent', name: credentials.email});
-  setLoading(false)
-  const res = await api.login(credentials); // { token: '...' }
-  if (!res?.token) throw new Error('Login failed');
-  await AsyncStorage.setItem('token', res.data.token);
-  const profile = await api.getProfile(res.data.token);
-  setUser(profile);
-};
-
-
-const signIn = async (credentials: { email: string; password: string }): Promise<void> => {
+  const signIn = async (credentials: { email: string; password: string }): Promise<void> => {
   console.log('Signing in with credentials:', credentials);
   setLoading(true);
   try {
-  const res = await api.login(credentials);
-  console.log('[DEBUG] API response:', res);
+    const res = await api.login(credentials);
 
-  const token = res.data?.token;
-  if (!token) throw new Error(res.message || 'Login failed: token not received');
-  await AsyncStorage.setItem('token', token);
+    const token = res.data?.token;
+    if (!token) {
+      throw new Error('Login failed: token not received');
+    }
 
-  const userDetails = {
-    ...res.data,
-    role: res.data.role,
-    // role: 'user', // temporarily hardcode role to 'user'
-    name: res.data.username,
-    email: res.data.email,
-  };
-  setUser(userDetails);
+    await AsyncStorage.setItem('token', token);
 
-  // Console log user details
-  console.log('[DEBUG] User details after login:', userDetails);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn('[DEBUG] Login failed:', message);
+    const userDetails: User = {
+      ...res.data,
+      role: res.data.role,
+      name1: res.data.username,
+      email: res.data.email,
+    };
+
+    setUser(userDetails);
+    console.log('[DEBUG] User details after login:', userDetails);
+  } catch (err: any) {
     setUser(null);
-    Alert.alert('Login failed', message || 'Unknown error');
+
+    // build nice message instead of raw 401
+    const status = err?.response?.status;
+    let niceMessage = 'Something went wrong. Please try again.';
+
+    if (status === 401) {
+      niceMessage =
+        'Invalid user ID or password. Please check your credentials and try again.';
+    }
+
+    Toast.show({
+      type: 'error',
+      text1: 'Login failed',
+      text2:
+        'Invalid user ID or password. Please check your credentials and try again.',
+      visibilityTime: 5000,
+      autoHide: true,
+      position: 'top',          // use top for stability
+      topOffset: 180,            // add margin from status bar
+    });
+
+
+    throw err;
   } finally {
     setLoading(false);
   }
 };
-
-
 
 
   const signOut = async () => {
@@ -102,11 +109,12 @@ const signIn = async (credentials: { email: string; password: string }): Promise
     setUser(null);
   };
 
-const getToken = async () => {
-  const t = await AsyncStorage.getItem('token');
-  console.log('[DEBUG] getToken', t);
-  return t;
-};
+  const getToken = async () => {
+    const t = await AsyncStorage.getItem('token');
+    console.log('[DEBUG] getToken', t);
+    return t;
+  };
+
   return (
     <AuthContext.Provider value={{ user, loading, signIn, signOut, getToken }}>
       {children}

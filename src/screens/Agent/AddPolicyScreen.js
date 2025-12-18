@@ -1,41 +1,112 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // assuming react-navigation is set up
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // for icons
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient'; // or expo-linear-gradient
 
 const insuranceTypes = [
-  { label: 'Life Insurance', icon: 'heart', type: 'life' },
-  { label: 'Health Insurance', icon: 'hospital', type: 'health' },
-  { label: 'Motor Insurance', icon: 'car', type: 'motor' },
-  { label: 'Other Insurance', icon: 'shield-check', type: 'other' },
+  {label: 'Life Insurance', icon: 'heart-pulse', type: 'life'},
+  {label: 'Health Insurance', icon: 'hospital-building', type: 'health'},
 ];
 
-export default function AddPolicyTypeScreen() {
+export default function AddPolicyScreen() {
   const navigation = useNavigation();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Select Insurance Type</Text>
-      <View style={styles.typeGrid}>
-        {insuranceTypes.map(item => (
-          <TouchableOpacity
-            key={item.type}
-            style={styles.card}
-            onPress={() => navigation.navigate('AddPolicyForm', { policyType: item.type })}
-          >
-            <Icon name={item.icon} size={40} color="#007bff" style={{marginBottom: 10}} />
-            <Text style={styles.label}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
+    <LinearGradient
+      colors={['#003B5C', '#00A8A8']}
+      style={styles.gradient}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Select Insurance Type</Text>
+          <Text style={styles.subtitle}>
+            Choose the policy you want to create
+          </Text>
+
+          <View style={styles.typeGrid}>
+            {insuranceTypes.map(item => (
+              <TouchableOpacity
+                key={item.type}
+                style={styles.typeCard}
+                activeOpacity={0.85}
+                onPress={() =>
+                  navigation.navigate('AddPolicyForm', {policyType: item.type})
+                }
+              >
+                <View style={styles.iconWrapper}>
+                  <Icon name={item.icon} size={34} color="#ffffff" />
+                </View>
+                <Text style={styles.typeLabel}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 24 },
-  title: { fontSize: 18, fontWeight: '700', marginBottom: 24, textAlign: 'center', color: '#2166e7' },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  card: { width: '45%', backgroundColor: '#f5faff', alignItems: 'center', marginBottom: 20, borderRadius: 16, padding: 24, elevation: 2 },
-  label: { fontSize: 16, color: '#2166e7', fontWeight: '600', textAlign: 'center' }
+  gradient: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderRadius: 24,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: {width: 0, height: 4},
+    elevation: 6,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#003B5C',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#667',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 22,
+  },
+  typeGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  typeCard: {
+    flex: 1,
+    marginHorizontal: 6,
+    backgroundColor: '#F4F7FB',
+    borderRadius: 18,
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  iconWrapper: {
+    backgroundColor: '#007BFF',
+    borderRadius: 999,
+    padding: 12,
+    marginBottom: 10,
+  },
+  typeLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#003B5C',
+  },
 });

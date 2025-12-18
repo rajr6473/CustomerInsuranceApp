@@ -1,66 +1,67 @@
-import React, { useEffect, useState } from 'react';
+// screens/Common/NotificationsScreen.js
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // or any icon library
-
-const sampleNotifications = [
-  {
-    id: '1',
-    type: 'renewal',
-    title: 'Policy Renewal Reminder',
-    message: 'Your health policy (LIC4567) is due for renewal on 30 Nov 2025. Please renew to continue your coverage.',
-    date: '2025-11-20',
-  },
-  {
-    id: '2',
-    type: 'password',
-    title: 'Password Expiry Alert',
-    message: 'Your account password will expire in 3 days. Please update your password to maintain account security.',
-    date: '2025-11-18',
-  },
-];
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const iconMap = {
   renewal: { name: 'event-available', color: '#2684FF' },
-  password: { name: 'vpn-key', color: '#43B78D' },
+  password: { name: 'vpn-key', color: '#4378BD' },
   default: { name: 'notifications', color: '#FFA940' },
 };
 
 const NotificationsScreen = () => {
+  const { getToken } = useAuth(); // if you need it elsewhere
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Set USE_API = true later for real API
-  const USE_API = false;
+  // const fetchNotifications = async () => {
+  //   // keep loader until response
+  //   if (!refreshing) setLoading(true);
+  //   try {
+  //     const token = await getToken();
+  //     const data = await api.getNotifications(token);
+  //     // Postman shows { success: true,  [ ... ] }
+  //     setNotifications(data?.data || []);
+  //   } catch (e) {
+  //     console.log('Notifications error', e);
+  //     setNotifications([]);
+  //   } finally {
+  //     setLoading(false);
+  //     setRefreshing(false);
+  //   }
+  // };
 
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      if (USE_API) {
-        // const response = await fetch('https://your-api-url.com/notifications');
-        // const data = await response.json();
-        // setNotifications(data.notifications || []);
-        setNotifications([]);
-      } else {
-        setNotifications(sampleNotifications);
-      }
-    } catch (e) {
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  // useEffect(() => {
+  //   fetchNotifications();
+  // }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchNotifications();
   };
+  const fetchNotifications = useCallback(async () => {
+  setLoading(true);
+  try {
+    const token = await getToken();
+    const data = await api.getNotifications(token);
+    setNotifications(data?.data || []);
+  } catch (err) {
+    console.log('[DEBUG] notifications error', err);
+    setNotifications([]);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+}, [getToken]);
+
+useEffect(() => {
+  fetchNotifications();
+}, [fetchNotifications]);
+
 
   const renderItem = ({ item }) => {
     const icon = iconMap[item.type] || iconMap.default;
@@ -72,8 +73,8 @@ const NotificationsScreen = () => {
         <View style={styles.textContainer}>
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.message}>{item.message}</Text>
+          <Text style={styles.date}>{item.date}</Text>
         </View>
-        <Text style={styles.date}>{item.date}</Text>
       </View>
     );
   };

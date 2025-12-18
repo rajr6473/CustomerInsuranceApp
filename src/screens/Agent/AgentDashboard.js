@@ -1,141 +1,300 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+// AgentDashboard.js
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useAuth } from '../../context/AuthContext'; // adjust relative path as needed
-
-
-// Example API function - replace with your actual API endpoints.
-// const fetchDashboardData = async () => {
-//   // Replace these URLs and data keys as per your backend.
-//   const dashboardRes = await fetch("https://yourapi.com/dashboard"); // Returns { agentName, commission }
-//   const dashData = await dashboardRes.json();
-
-//   const customersRes = await fetch("https://yourapi.com/customers"); // Returns { count }
-//   const customersData = await customersRes.json();
-
-//   const policiesRes = await fetch("https://yourapi.com/policies"); // Returns { count }
-//   const policiesData = await policiesRes.json();
-
-//   return {
-//     agentName: dashData.agentName,
-//     commission: dashData.commission,
-//     customerCount: customersData.count,
-//     policyCount: policiesData.count,
-//   };
-// };
+import { useAuth } from '../../context/AuthContext';
 
 export default function AgentDashboard({ navigation }) {
-  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Dummy / placeholder data
-  // const [data] = useState({
-  //   agentName: "Agent name",
-  //   commission: 15000,
-  //   customerCount: 12,
-  //   policyCount: 27,
-  // });
+  const [userData, setUserData] = useState(null);
   const auth = useAuth();
+
   useEffect(() => {
-    console.log('[AgentDashboard] User:', auth.user);
-    console.log('[AgentDashboard] Token:', auth.getToken());
-    setData(auth.user);
-    setLoading(false);
-    // (Optional: fetch dashboard data here)
+    const load = async () => {
+      const u = auth.user || {};
+      setUserData(u);
+      setLoading(false);
+    };
+    load();
   }, []);
 
-  // useEffect(() => {
-  //   fetchDashboardData()
-  //     .then(res => {
-  //       setData(res);
-  //       setLoading(false);
-  //     })
-  //     .catch(() => setLoading(false));
-  // }, []);
-
-  if (loading) {
+  if (loading || !userData) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color="#367cff" />
       </View>
     );
   }
 
+  const displayName = userData.username || 'Agent';
+  const customersCount = userData.customers_count || 0;
+  const policiesCount = userData.policies_count || 0;
+  const commission = userData.commission_earned || '0';
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      {/* BLUE HEADER CARD */}
       <View style={styles.header}>
-        <Text style={styles.dashboardTitle}>Agent Dashboard</Text>
-        <Text style={styles.welcome}>Welcome back,</Text>
-        <Text style={styles.agentName}>{data.full_name}</Text>
+        <Text style={styles.headerTitle}>Agent Dashboard</Text>
+        <Text style={styles.headerSubtitle}>Welcome back,</Text>
+        <Text style={styles.headerName}>{displayName}</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickActionsContainer}>
-          <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("AddCustomer")}>
-            <Icon name="person-add" size={28} color="#22b07d" />
-            <Text style={styles.quickActionText}>Add Customer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("AddPolicy")}>
-            <Icon name="note-add" size={28} color="#429af7" />
-            <Text style={styles.quickActionText}>Add Policy</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* CONTENT */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* QUICK ACTIONS */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsRow}>
+            <TouchableOpacity
+              style={styles.quickCard}
+              onPress={() => navigation.navigate('AddCustomer')}
+            >
+              <Icon
+                name="person-add"
+                size={26}
+                color="#22b07d"
+                style={styles.quickIcon}
+              />
+              <Text style={styles.quickText}>Add Customer</Text>
+            </TouchableOpacity>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Statistics Overview</Text>
-        <View style={styles.statisticsRow}>
-          <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate("AllCustomers")}>
-            <Icon name="group" size={28} color="#3a7efd" />
-            <Text style={styles.statLabel}>All Customers</Text>
-            <Text style={styles.statValue}>{data.customerCount}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate("AllPolicies")}>
-            <Icon name="description" size={28} color="#22b07d" />
-            <Text style={styles.statLabel}>All Policies</Text>
-            <Text style={styles.statValue}>{data.policyCount}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.statisticsRow}>
-          <View style={styles.statCard}>
-            <Icon name="monetization-on" size={28} color="#fdbb21" />
-            <Text style={styles.statLabel}>Commission Earned</Text>
-            <Text style={styles.statValue}>₹{data.commission}</Text>
+            <TouchableOpacity
+              style={styles.quickCard}
+              onPress={() => navigation.navigate('AddPolicy')}
+            >
+              <Icon
+                name="note-add"
+                size={26}
+                color="#429af7"
+                style={styles.quickIcon}
+              />
+              <Text style={styles.quickText}>Add Policy</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.quickActionsRow, { marginTop: 10 }]}>
+            <TouchableOpacity
+              style={styles.quickCard}
+              onPress={() => navigation.navigate('AddLeadForm')}
+            >
+              <Icon
+                name="assignment"
+                size={26}
+                color="#f39c12"
+                style={styles.quickIcon}
+              />
+              <Text style={styles.quickText}>Add Lead</Text>
+            </TouchableOpacity>
+
+            <View style={{ width: '48%' }} />
           </View>
         </View>
-      </View>
-    </ScrollView>
+
+        {/* STATISTICS */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Statistics Overview</Text>
+          <View style={styles.statsGrid}>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => navigation.navigate('AllCustomers')}
+            >
+              <View style={styles.statRow}>
+                <Icon
+                  name="group"
+                  size={24}
+                  color="#22b07d"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statLabel}>All Customers</Text>
+              </View>
+              <Text style={styles.statValue}>{customersCount}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => navigation.navigate('AllPolicies')}
+            >
+              <View style={styles.statRow}>
+                <Icon
+                  name="description"
+                  size={24}
+                  color="#429af7"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statLabel}>All Policies</Text>
+              </View>
+              <Text style={styles.statValue}>{policiesCount}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.statCard}>
+              <View style={styles.statRow}>
+                <Icon
+                  name="monetization-on"
+                  size={24}
+                  color="#f4b021"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statLabel}>Commission Earned</Text>
+              </View>
+              <Text style={styles.commissionValue}>₹{commission}</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f6fc" },
+  container: {
+    flex: 1,
+    backgroundColor: '#f4f6fc', // soft app background
+  },
+
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f4f6fc',
+  },
+
   header: {
-    padding: 18, backgroundColor: "#367cff", borderBottomLeftRadius: 20, borderBottomRightRadius: 20
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 18,
+    backgroundColor: '#367cff', // primary blue
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  dashboardTitle: {
-    color: "#fff", fontSize: 20, fontWeight: "bold", marginBottom: 8
+
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
   },
-  welcome: { color: "#fff", fontSize: 13, marginBottom: 2 },
-  agentName: { color: "#fff", fontSize: 15, fontWeight: "bold" },
-  section: { padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: "bold", color: "#393e46", marginBottom: 8 },
-  quickActionsContainer: {
-    flexDirection: "row", justifyContent: "space-between"
+
+  headerSubtitle: {
+    color: '#e2e8f0',
+    fontSize: 13,
   },
-  quickAction: {
-    width: "48%", backgroundColor: "#fff", borderRadius: 12, padding: 20, alignItems: "center", marginBottom: 8, elevation: 2
+
+  headerName: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 4,
   },
-  quickActionText: { marginTop: 8, color: "#393e46", fontWeight: "600", fontSize: 15 },
-  statisticsRow: {
-    flexDirection: "row", justifyContent: "space-between", marginBottom: 10
+
+  scroll: {
+    flex: 1,
   },
+
+  content: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+
+  section: {
+    marginBottom: 20,
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#393e46',
+    marginBottom: 10,
+  },
+
+  // QUICK ACTIONS
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  quickCard: {
+    width: '48%',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+
+  quickIcon: {
+    marginBottom: 8,
+  },
+
+  quickText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#393e46',
+  },
+
+  // STATISTICS
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+
   statCard: {
-    width: "48%", backgroundColor: "#fff", borderRadius: 12, padding: 18, alignItems: "center", elevation: 2
+    width: '48%',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
-  statLabel: { color: "#393e46", fontSize: 14, marginTop: 5 },
+
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  statIcon: {
+    marginRight: 8,
+  },
+
+  statLabel: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+
   statValue: {
-    fontSize: 22, fontWeight: "bold", color: "#367cff", marginTop: 8
-  }
+    marginTop: 6,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#367cff',
+  },
+
+  commissionValue: {
+    marginTop: 6,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f9f4f',
+  },
 });

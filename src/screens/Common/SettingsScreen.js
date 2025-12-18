@@ -1,144 +1,188 @@
+// src/screens/Common/JS/SettingsScreen.js
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../context/AuthContext'; // adjust relative path as needed
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useAuth} from '../../context/AuthContext';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// import Icon from 'react-native-vector-icons/MaterialIcons'; // Uncomment if using vector icons
+export default function SettingsScreen({navigation}) {
+  const {user, signOut} = useAuth();
+  const displayName = user?.username || 'Customer';
 
-export default function SettingsScreen({ navigation }){
-const auth = useAuth();
-const { user, getToken } = useAuth();
-
-const displayName = user?.full_name || 'Customer';
-
-return (
-    <SafeAreaView style={{flex:1, backgroundColor:'#f7f7f7'}}>
-      {/* Profile Header */}
-      <View style={styles.profileContainer}>
-        {/* <Icon name="person" size={40} color="#4Bab3a" style={styles.profileIcon} /> */}
-        {/* <View style={styles.profileIcon}/> */}
-        {
-            <View style={styles.avatarWrap}>
-            <Text style={styles.avatarEmoji}>🧑‍💼</Text>
-            </View>
-        }
-        <Text style={styles.profileName}>{displayName}</Text>
-        {/* Add below line for subtitle if required */}
-        {/* <Text style={styles.profileSubtitle}>Agent</Text> */}
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Profile card */}
+      <View style={styles.profileCard}>
+        <View style={styles.avatarCircle}>
+          <Text style={styles.avatarInitial}>
+            {displayName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <View>
+          <Text style={styles.profileName}>{displayName}</Text>
+          <Text style={styles.profileSubtitle}>Insurance Book</Text>
+        </View>
       </View>
 
-      {/* Card Settings Section */}
+      {/* Settings list */}
       <View style={styles.section}>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Info')}>
-          {/* <Icon name="info" size={24} color="#4Bab3a" style={styles.cardIcon} /> */}
-          <View style={styles.placeholderIcon}/>
-          <View>
-            <Text style={styles.cardTitle}>Info</Text>
-          </View>
-        </TouchableOpacity>
+        <SettingsItem
+          label="Info"
+          subtitle="View your profile info"
+          color="#e5e7eb"
+          icon="information-outline"
+          onPress={() => navigation.navigate('Info')}
+        />
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ChangePassword')}>
-          {/* <Icon name="lock" size={24} color="#ffb300" style={styles.cardIcon} /> */}
-          <View style={[styles.placeholderIcon, {backgroundColor:'#ffb300'}]}/>
-          <View>
-            <Text style={styles.cardTitle}>Change Password</Text>
-            <Text style={styles.cardSubtitle}>Update your login password</Text>
-          </View>
-        </TouchableOpacity>
+        <SettingsItem
+          label="Change Password"
+          subtitle="Update your login password"
+          color="#facc15"
+          icon="lock-reset"
+          onPress={() => navigation.navigate('ChangePassword')}
+        />
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Terms')}>
-          {/* <Icon name="description" size={24} color="#a98241" style={styles.cardIcon} /> */}
-          <View style={[styles.placeholderIcon, {backgroundColor:'#a98241'}]}/>
-          <View>
-            <Text style={styles.cardTitle}>Terms & Condition</Text>
-            <Text style={styles.cardSubtitle}>View app terms and conditions</Text>
-          </View>
-        </TouchableOpacity>
+        <SettingsItem
+          label="Terms & Conditions"
+          subtitle="View app terms and conditions"
+          color="#f97316"
+          icon="file-document-outline"
+          onPress={() => navigation.navigate('Terms')}
+        />
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ContactUs')}>
-          {/* <Icon name="support-agent" size={24} color="#43b0c4" style={styles.cardIcon} /> */}
-          <View style={[styles.placeholderIcon, {backgroundColor:'#43b0c4'}]}/>
-          <View>
-            <Text style={styles.cardTitle}>Contact Us</Text>
-            <Text style={styles.cardSubtitle}>For enquiry and support</Text>
-          </View>
-        </TouchableOpacity>
+        <SettingsItem
+          label="Contact Us"
+          subtitle="For enquiry and support"
+          color="#06b6d4"
+          icon="phone-in-talk-outline"
+          onPress={() => navigation.navigate('ContactUs')}
+        />
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('HelpDesk')}>
-          {/* <Icon name="support-agent" size={24} color="#43b0c4" style={styles.cardIcon} /> */}
-          <View style={[styles.placeholderIcon, {backgroundColor:'#43b0c4'}]}/>
-          <View>
-            <Text style={styles.cardTitle}>Helpdesk</Text>
-            <Text style={styles.cardSubtitle}>For quiries and feedback</Text>
-          </View>
-        </TouchableOpacity>
+        <SettingsItem
+          label="Helpdesk"
+          subtitle="For queries and feedback"
+          color="#22c55e"
+          icon="lifebuoy"
+          onPress={() => navigation.navigate('HelpDesk')}
+        />
       </View>
 
-      {/* Logout Button at the Bottom */}
-      <TouchableOpacity style={styles.logoutButton} onPress={auth.signOut}>
-        <Text style={styles.logoutText}>Logout</Text>
+      {/* Logout */}
+      <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <Icon name="logout" size={18} color="#fff" />
+          <Text style={styles.logoutText}>  Logout</Text>
+        </View>
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
+function SettingsItem({label, subtitle, color, icon, onPress}) {
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+      <View style={[styles.placeholderIcon, {backgroundColor: color}]}>
+        <Icon name={icon} size={18} color="#fff" />
+      </View>
+      <View style={{flex: 1}}>
+        <Text style={styles.cardTitle}>{label}</Text>
+        <Text style={styles.cardSubtitle}>{subtitle}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  profileContainer: {
-    backgroundColor: '#4Bab3a', // green
-    alignItems: 'center',
-    paddingVertical: 24,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginBottom: 24,
+  container: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 16,
+    paddingTop: 10,
   },
-  profileIcon: {
-    width: 56, height: 56, borderRadius: 28, backgroundColor: '#b3e6b2', marginBottom: 8,
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#22c55e',
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginBottom: 20,
+  },
+  avatarCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatarInitial: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
   },
   profileName: {
-    fontSize: 20, color: '#fff', fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   profileSubtitle: {
-    fontSize: 14, color: '#e5e5e5'
+    fontSize: 13,
+    color: '#dcfce7',
+    marginTop: 2,
   },
   section: {
-    paddingHorizontal: 16,
     flex: 1,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
+    backgroundColor: '#ffffff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
     marginBottom: 12,
-    borderRadius: 12,
-    elevation: 2, // Android
-    shadowColor: "#000", // iOS
-    shadowOffset: { width: 0, height: 1 }, // iOS
-    shadowOpacity: 0.1, // iOS
-    shadowRadius: 1.5, // iOS
-  },
-  cardIcon: {
-    marginRight: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 2,
   },
   placeholderIcon: {
-    width: 32, height: 32, borderRadius: 8, marginRight: 16, backgroundColor: "#ddd",
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    marginRight: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardTitle: {
-    fontWeight: '700', fontSize: 16, color: '#222'
+    fontWeight: '700',
+    fontSize: 15,
+    color: '#111827',
   },
   cardSubtitle: {
-    fontSize: 13, color: '#888'
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
   },
   logoutButton: {
-    margin: 16,
-    borderRadius: 12,
-    backgroundColor: '#ff3c32',
+    backgroundColor: '#ef4444',
+    borderRadius: 999,
+    paddingVertical: 12,
     alignItems: 'center',
-    padding: 16,
+    marginBottom: 18,
+    marginTop: 4,
   },
   logoutText: {
     fontWeight: '700',
-    color: '#fff',
-    fontSize: 16
-  }
+    color: '#ffffff',
+    fontSize: 15,
+  },
 });

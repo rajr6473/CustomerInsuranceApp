@@ -61,118 +61,136 @@ export default function ChangePasswordScreen() {
     }
   };
 
-  const renderField = (
-    label,
-    value,
-    setValue,
-    secure,
-    onToggle,
-  ) => (
-    <View style={styles.fieldWrapper}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputRow}>
-        <TextInput
-          value={value}
-          onChangeText={setValue}
-          secureTextEntry={!secure}
-          style={styles.input}
-          placeholder={label}
+  const renderField = (label, value, setValue, secure, onToggle) => (
+  <View style={styles.fieldWrapper}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.inputRow}>
+      <TextInput
+        value={value}
+        onChangeText={setValue}
+        secureTextEntry={secure}
+        style={styles.input}
+        placeholder={label}
+      />
+      <TouchableOpacity onPress={onToggle} style={styles.iconWrap}>
+        <Icon
+          name={secure ? 'visibility-off' : 'visibility'}
+          size={20}
+          color="#64748b"
         />
-        <TouchableOpacity onPress={onToggle} style={styles.iconWrap}>
-          <Icon
-            name={secure ? 'visibility-off' : 'visibility'}
-            size={20}
-            color="#64748b"
-          />
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     </View>
-  );
+  </View>
+);
+
   const onCancel = () => {
     navigation.goBack();
   };
 
 
   return (
-  <SafeAreaView style={styles.container}>
-    <Text style={styles.title}>Change Password</Text>
+    <SafeAreaView style={styles.page}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Change Password</Text>
+        <Text style={styles.subtitle}>
+          Keep your account secure by updating your password regularly.
+        </Text>
 
-    {renderField(
-      'Current Password',
-      current,
-      setCurrent,
-      showCurrent,
-      () => setShowCurrent(s => !s),
-    )}
-    {renderField(
-      'New Password',
-      newPwd,
-      setNewPwd,
-      showNew,
-      () => setShowNew(s => !s),
-    )}
-    {renderField(
-      'Confirm New Password',
-      confirm,
-      setConfirm,
-      showConfirm,
-      () => setShowConfirm(s => !s),
-    )}
-
-    <View style={styles.buttonRow}>
-      <TouchableOpacity
-        style={[styles.secondaryButton, loading && { opacity: 0.7 }]}
-        onPress={onCancel}
-        disabled={loading}
-      >
-        <Text style={styles.secondaryText}>Cancel</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={onUpdate}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Update</Text>
+        {renderField(
+          'Current Password',
+          current,
+          setCurrent,
+          !showCurrent,
+          () => setShowCurrent(s => !s),
         )}
-      </TouchableOpacity>
-    </View>
-  </SafeAreaView>
-);
 
+        {renderField(
+          'New Password',
+          newPwd,
+          setNewPwd,
+          !showNew,
+          () => setShowNew(s => !s),
+        )}
+
+        {renderField(
+          'Confirm New Password',
+          confirm,
+          setConfirm,
+          !showConfirm,
+          () => setShowConfirm(s => !s),
+        )}
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.secondaryButton, loading && {opacity: 0.7}]}
+            onPress={onCancel}
+            disabled={loading}
+          >
+            <Text style={styles.secondaryText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.primaryButton, loading && {opacity: 0.7}]}
+            onPress={onUpdate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.primaryText}>Update</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  page: {
     flex: 1,
+    backgroundColor: '#f3f4f6',
     padding: 16,
-    backgroundColor: '#f6f8fb',
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: {width: 0, height: 3},
+    elevation: 3,
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    marginBottom: 16,
     color: '#111827',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 16,
   },
   fieldWrapper: {
     marginBottom: 14,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#4b5563',
     marginBottom: 4,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#d1d5db',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: '#f9fafb',
+    paddingHorizontal: 12,
   },
   input: {
     flex: 1,
@@ -183,49 +201,43 @@ const styles = StyleSheet.create({
   iconWrap: {
     paddingLeft: 8,
   },
-  button: {
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 18,
-    backgroundColor: '#007bff',
-    paddingVertical: 12,
-    borderRadius: 10,
+  },
+  secondaryButton: {
+    flex: 1,
+    marginRight: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+    paddingVertical: 11,
     alignItems: 'center',
   },
-  buttonText: {
+  secondaryText: {
+    fontSize: 15,
+    color: '#4b5563',
+    fontWeight: '500',
+  },
+  primaryButton: {
+    flex: 1,
+    marginLeft: 8,
+    borderRadius: 999,
+    backgroundColor: '#2563eb',
+    paddingVertical: 11,
+    alignItems: 'center',
+    shadowColor: '#2563eb',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: {width: 0, height: 6},
+    elevation: 4,
+  },
+  primaryText: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '600',
   },
-  buttonRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginTop: 18,
-},
-secondaryButton: {
-  flex: 1,
-  marginRight: 8,
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: '#d1d5db',
-  paddingVertical: 12,
-  alignItems: 'center',
-  backgroundColor: '#ffffff',
-},
-secondaryText: {
-  fontSize: 15,
-  color: '#4b5563',
-},
-button: {
-  flex: 1,
-  marginLeft: 8,
-  backgroundColor: '#007bff',
-  paddingVertical: 12,
-  borderRadius: 10,
-  alignItems: 'center',
-},
-buttonText: {
-  color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '600',
-},
-
 });
+

@@ -1,3 +1,4 @@
+// src/screens/Customer/InfoScreen.js
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -14,7 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function InfoScreen() {
   const { getToken } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);   // NEW
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -29,206 +30,232 @@ export default function InfoScreen() {
       } catch (err) {
         console.log('[DEBUG] loadProfile error', err);
       } finally {
-        setLoading(false);                        // stop loader
+        setLoading(false);
       }
     };
     loadProfile();
   }, [getToken]);
 
   if (loading) {
-    // full‑screen loader
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.screen}>
         <View style={styles.loaderWrap}>
-          <ActivityIndicator size="large" color="#3186ce" />
-          <Text style={styles.loaderText}>Loading info...</Text>
+          <ActivityIndicator size="large" color="#1d4ed8" />
+          <Text style={styles.loaderText}>Loading your profile...</Text>
         </View>
       </SafeAreaView>
     );
   }
+
+  const initials =
+    profile?.full_name
+      ?.split(' ')
+      .map(p => p[0]?.toUpperCase())
+      .join('') || 'DW';
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Image
-          source={profile?.user_image ? { uri: profile.user_image } : undefined}
-          style={styles.avatarImg}
-        />
-        <View style={styles.avatarWrap}>
-          <Text style={styles.avatarEmoji}>👤</Text>
-        </View>
-        <View style={styles.userName}>
-          <Text style={styles.userNameText}>
-            {profile?.full_name || 'User Name'}
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.container}>
+        {/* Header / banner */}
+        <View style={styles.headerBanner}>
+          {profile?.user_image ? (
+            <Image source={{ uri: profile.user_image }} style={styles.avatarImg} />
+          ) : (
+            <View style={styles.avatarWrap}>
+              <Text style={styles.avatarInitials}>{initials}</Text>
+            </View>
+          )}
+
+          <Text style={styles.nameText}>
+            {profile?.full_name || 'Customer name'}
           </Text>
-          <Text style={styles.userSubtitle}>Welcome</Text>
+          <Text style={styles.subtitleText}>Welcome to Dr Wise Insurance</Text>
         </View>
+
+        {/* Cards */}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Basic information</Text>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Full name</Text>
+              <Text style={styles.value}>{profile?.full_name ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{profile?.email ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Mobile</Text>
+              <Text style={styles.value}>{profile?.mobile_number ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Gender</Text>
+              <Text style={styles.value}>{profile?.gender ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Age</Text>
+              <Text style={styles.value}>{profile?.age ?? '-'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Personal information</Text>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Birth date</Text>
+              <Text style={styles.value}>{profile?.birth_date ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>City</Text>
+              <Text style={styles.value}>{profile?.city ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>State</Text>
+              <Text style={styles.value}>{profile?.state ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Address</Text>
+              <Text
+                style={[styles.value, { flex: 1, textAlign: 'right' }]}
+                numberOfLines={2}
+              >
+                {profile?.address ?? '-'}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>PAN</Text>
+              <Text style={styles.value}>{profile?.pan ?? '-'}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>GST</Text>
+              <Text style={styles.value}>{profile?.gst ?? '-'}</Text>
+            </View>
+          </View>
+        </ScrollView>
       </View>
-
-      <ScrollView style={styles.cardSection}>
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Basic Information</Text>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Full Name</Text>
-            <Text style={styles.value}>{profile?.full_name ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{profile?.email ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Mobile</Text>
-            <Text style={styles.value}>{profile?.mobile_number ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Gender</Text>
-            <Text style={styles.value}>{profile?.gender ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Age</Text>
-            <Text style={styles.value}>{profile?.age ?? '-'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Personal Information</Text>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Birth Date</Text>
-            <Text style={styles.value}>{profile?.birth_date ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>City</Text>
-            <Text style={styles.value}>{profile?.city ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>State</Text>
-            <Text style={styles.value}>{profile?.state ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Address</Text>
-            <Text style={styles.value}>{profile?.address ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>PAN</Text>
-            <Text style={styles.value}>{profile?.pan ?? '-'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>GST</Text>
-            <Text style={styles.value}>{profile?.gst ?? '-'}</Text>
-          </View>
-        </View>
-      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f6f8fb' },
-
-  headerWrap: {
-    backgroundColor: '#b2dbfa',
-    alignItems: 'center',
-    paddingVertical: 16,      // was 32
-    paddingTop: 24,           // was 40
-    marginBottom: 8,          // was 12
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  screen: {
+    flex: 1,
+    backgroundColor: '#0f172a', // match app
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
 
+  headerBanner: {
+    backgroundColor: '#1d4ed8',
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 14,
+  },
   avatarWrap: {
-    backgroundColor: '#fff',
-    borderRadius: 32,         // was 40
-    width: 64,                // was 80
-    height: 64,               // was 80
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#eff6ff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,          // was 10
-    elevation: 2,
+    marginBottom: 8,
   },
-
   avatarImg: {
-    position: 'absolute',
-    top: 20,                  // was 32
-    width: 64,                // was 80
-    height: 64,               // was 80
-    borderRadius: 32,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: '#eff6ff',
   },
-
-  avatarEmoji: { fontSize: 36 }, // was 48
-
-  userName: {
-    alignItems: 'center',
-    marginTop: 72,            // was 96
+  avatarInitials: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1d4ed8',
   },
-
-  userNameText: {
-    fontSize: 18,             // was 22
-    fontWeight: 'bold',
-    color: '#0c4a6e',
-  },
-
-  userSubtitle: {
-    fontSize: 13,             // was 16
-    color: '#3186ce',
-    marginTop: 2,             // was 3
-  },
-
-  cardSection: {
-    flex: 1,
-    paddingHorizontal: 16,    // slightly reduced
+  nameText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
     marginTop: 4,
   },
-
-  infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,         // was 18
-    padding: 16,              // was 20
-    marginBottom: 12,         // was 16
-    shadowColor: '#1e293b',
-    shadowOpacity: 0.06,      // a bit lighter
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
+  subtitleText: {
+    fontSize: 13,
+    color: '#bfdbfe',
+    marginTop: 2,
   },
 
+  scroll: {
+    flex: 1,
+  },
+
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    shadowColor: '#020617',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#346c92',
-    marginBottom: 8,
+    color: '#0f172a',
+    marginBottom: 10,
   },
-
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 6,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    paddingVertical: 6,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#e2e8f0',
-    paddingBottom: 4,
+    borderBottomColor: '#e5e7eb',
+  },
+  label: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  value: {
+    fontSize: 13,
+    color: '#111827',
+    fontWeight: '500',
+    maxWidth: '55%',
+    textAlign: 'right',
   },
 
-  label: { fontSize: 14, color: '#7b8794' },
-  value: { fontSize: 14, color: '#22223b', fontWeight: '500' },
   loaderWrap: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-loaderText: {
-  marginTop: 8,
-  fontSize: 14,
-  color: '#64748b',
-},
-
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0f172a',
+  },
+  loaderText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#e5e7eb',
+  },
 });

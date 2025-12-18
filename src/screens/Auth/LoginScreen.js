@@ -1,121 +1,359 @@
-import React, {useState} from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
-import api from '../../services/api';
-import { useAuth } from '../../context/AuthContext'; // adjust relative path as needed
+// src/screens/Auth/LoginScreen.js
+// src/screens/Auth/LoginScreen.js
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // or any icon library
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useAuth } from '../../context/AuthContext';
 
+export default function LoginScreen({ navigation }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn, loading } = useAuth();   // use global loading
 
+  const onLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      setError('User ID / Mobile and Password are required.');
+      return;
+    }
 
-export default function LoginScreen({ navigation }){
-const [email, setEmail] = useState('');
-const [password, setPassword] = useState('');
-const [showPassword, setShowPassword] = useState(false);
-const [loading, setLoading] = useState(false);
-const auth = useAuth();
+    setError('');
 
-const onLogin = async () => {
-    setLoading(true);
     try {
-      await auth.signIn({ email: email.trim(), password: password.trim() });
-      // Optionally: navigation.navigate('DashboardHome');
+      await signIn({
+        email: email.trim(),
+        password: password.trim(),
+      });
+      // on success, your AppNavigator should move to dashboard based on user
     } catch (e) {
-      Alert.alert('Login failed', e.message);
-    } finally {
-      setLoading(false);
+      // no need to do much; toast already shown
+      // optional: keep inline error message
+      setError('Invalid credentials. Please check details and try again.');
     }
   };
-  
-const onLoginOld = async () => {
-  try {
-  setLoading(true);
-  const response = await fetch('https://dr-wise-ag.onrender.com/api/v1/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email.trim(), password: password.trim() })
-  });
-  const data = await response.json();
-  console.log(email.trim(), password.trim());
-  console.log('Fetch response:', data);
-  // if (!data.data?.token) throw new Error('Invalid response');
-  if (data.success && data.data && data.data.token) {
-    console.log('Login successful, token:', data.data.token);
-  await auth.signIn({ token: data.data.token });
-  // navigation.navigate('DashboardHome'); // enable this if you want auto-navigation
-} else {
-  throw new Error(data.message || 'Invalid response');
-}
 
-} catch (e) {
-  Alert.alert('Login failed', e.message);
-} finally {
-  setLoading(false);
-}
+  return (
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.container}>
+        {/* logo + text */}
+        <View style={styles.logoArea}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoInitial}>DW</Text>
+          </View>
+          <Text style={styles.appName}>Dr Wise Insurance</Text>
+          <Text style={styles.tagline}>
+            Secure coverage at your fingertips
+          </Text>
+        </View>
 
-};
+        <View style={styles.middle}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Sign In</Text>
+            <Text style={styles.cardSubtitle}>
+              Please enter your details to continue
+            </Text>
 
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-return (
-    <SafeAreaView style={{ flex: 1, padding: 16, justifyContent: 'center', backgroundColor: '#fff' }}>
-      {/* Logo */}
-      <View style={{ alignItems: 'center', marginBottom: 24 }}>
-        {/* Replace with <Image source={require('./logo.png')} /> */}
-        <Text style={{ fontSize: 40, color: '#007bff', fontWeight: 'bold' }}>IB</Text>
-        <Text style={{ fontSize: 20, color: '#666' }}>INSUREBOOK TECHNOLOGY PVT LTD</Text>
+            <View style={styles.inputWrapper}>
+              <Icon
+                name="person"
+                size={20}
+                color="#A0AEC0"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="User ID or Mobile Number"
+                placeholderTextColor="#A0AEC0"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                editable={!loading}
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Icon
+                name="lock"
+                size={20}
+                color="#A0AEC0"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#A0AEC0"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                editable={!loading}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={loading}
+              >
+                <Icon
+                  name={showPassword ? 'visibility' : 'visibility-off'}
+                  size={20}
+                  color="#A0AEC0"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              onPress={onLogin}
+              disabled={loading}
+              activeOpacity={0.9}
+              style={[
+                styles.primaryButton,
+                loading && styles.primaryButtonDisabled,
+              ]}
+            >
+              <Text style={styles.primaryButtonText}>
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Text>
+            </TouchableOpacity>
+
+            <View className="linksRow" style={styles.linksRow}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ForgotPassword')}
+                disabled={loading}
+              >
+                <Text style={styles.linkText}>Forgot Password?</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Register')}
+                disabled={loading}
+              >
+                <Text style={styles.linkText}>Register</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={styles.footerText}>
+            For enquiry contact us:{' '}
+            <Text style={styles.footerPhone}>+91 9999999</Text>
+          </Text>
+        </View>
       </View>
-
-      {/* Title */}
-      <Text style={{ fontSize: 24, fontWeight: '600', textAlign: 'center' }}>Sign In</Text>
-      <Text style={{ fontSize: 14, color: '#999', textAlign: 'center', marginBottom: 20 }}>
-        Please Enter The Details To Begin
-      </Text>
-
-      {/* User ID Input */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f2', borderRadius: 8, marginBottom: 12, padding: 10 }}>
-        <Icon name="person" size={20} color="#666" style={{ marginRight: 8 }} />
-        <TextInput
-          style={{ flex: 1, fontSize: 16 }}
-          placeholder="User ID or Mobile Number"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Password Input */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f2', borderRadius: 8, marginBottom: 16, padding: 10 }}>
-        <Icon name="lock" size={20} color="#666" style={{ marginRight: 8 }} />
-        <TextInput
-          style={{ flex: 1, fontSize: 16 }}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword}
-        />
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <Icon name={showPassword ? "visibility" : "visibility-off"} size={20} color="#666" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Sign In Button */}
-      <TouchableOpacity onPress={onLogin} disabled={loading} style={{ backgroundColor: '#007bff', borderRadius: 8, padding: 14, marginBottom: 12 }}>
-        <Text style={{ color: '#fff', textAlign: 'center', fontSize: 18, fontWeight: '600' }}>Sign In</Text>
-      </TouchableOpacity>
-
-      {/* Action Links */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-          <Text style={{ color: '#007bff' }}>Forgot Password?</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={{ color: '#007bff' }}>Register</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Contact & Version */}
-      <Text style={{ textAlign: 'center', color: '#666', marginBottom: 4 }}>
-        For Enquiry Contact Us: <Text style={{ color: '#007bff' }}>+91999999</Text>
-      </Text>
     </SafeAreaView>
   );
 }
+
+// keep your existing styles object (no loader / popup needed here)
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  logoArea: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#1d4ed8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  logoInitial: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  appName: {
+    color: '#f9fafb',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  tagline: {
+    color: '#9ca3af',
+    fontSize: 13,
+  },
+  middle: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    shadowColor: '#000000',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#111827',
+  },
+  primaryButton: {
+    marginTop: 4,
+    backgroundColor: '#1d4ed8',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonDisabled: {
+    opacity: 0.7,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  linksRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 14,
+  },
+  linkText: {
+    fontSize: 13,
+    color: '#1d4ed8',
+    fontWeight: '600',
+  },
+  footerText: {
+    marginTop: 18,
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  footerPhone: {
+    color: '#60a5fa',
+    fontWeight: '600',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 13,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+
+  /* Loader overlay */
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderBox: {
+    width: 140,
+    height: 140,
+    borderRadius: 20,
+    backgroundColor: '#020617',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderText: {
+    marginTop: 12,
+    color: '#e5e7eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  /* Centered error popup */
+  alertOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertBox: {
+    width: '85%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 12,
+  },
+  alertTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#b91c1c',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: 15,
+    color: '#4b5563',
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+  alertButton: {
+    alignSelf: 'center',
+    marginTop: 4,
+    paddingHorizontal: 32,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: '#1d4ed8',
+  },
+  alertButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});

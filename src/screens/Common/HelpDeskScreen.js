@@ -4,58 +4,35 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
   Alert,
-  StyleSheet,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
+  ScrollView,
 } from 'react-native';
-import axios from 'axios';
-import { pickMultiple, types } from '@react-native-documents/picker';
-import { useNavigation } from '@react-navigation/native'; // assuming react-navigation is set up
-
-
-const API_URL = 'https://example.com/api/helpdesk';  // <-- Change to your endpoint
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 export default function HelpDeskScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [description, setDescription] = useState('');
-  const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
 
+  const navigation = useNavigation();
+  const { getToken } = useAuth();
 
   const validate = () => {
     if (!name.trim()) return 'Please enter your name.';
     if (!email.trim()) return 'Please enter your email.';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return 'Please enter a valid email address.';
-    if (!phone.trim() || phone.replace(/[^0-9]/g, '').length < 7) return 'Please enter a valid phone number.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email address.';
+    if (!phone.trim() || phone.replace(/[^\d]/g, '').length < 7)
+      return 'Please enter a valid phone number.';
     if (!description.trim()) return 'Please add a description.';
     return null;
-  };
-
-  const pickAttachmentsHandler = async () => {
-    try {
-      const results = await pickMultiple({ type: [types.allFiles] });
-      const uris = new Set(attachments.map(a => a.uri));
-      const merged = [...attachments];
-      results.forEach(file => {
-        if (!uris.has(file.uri)) {
-          merged.push(file);
-          uris.add(file.uri);
-        }
-      });
-      setAttachments(merged);
-    } catch (err) {
-      Alert.alert('Error', 'Could not pick attachment.');
-    }
-  };
-
-  const removeAttachment = uri => {
-    setAttachments(prev => prev.filter(a => a.uri !== uri));
   };
 
   const handleSubmit = async () => {
@@ -64,57 +41,62 @@ export default function HelpDeskScreen() {
       Alert.alert('Validation', error);
       return;
     }
+
     setLoading(true);
+
     try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('email', email);
-      formData.append('phone', phone);
-      formData.append('description', description);
-      attachments.forEach((file, idx) => {
-        formData.append('attachments', {
-          uri: file.uri,
-          type: file.type || 'application/octet-stream',
-          name: file.name || `attachment-${idx}`,
-        });
-      });
-      await axios.post(API_URL, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 30000,
-      });
-      Alert.alert('Success', 'Helpdesk request submitted successfully.');
+      const token = await getToken();
+
+      const payload = {
+        name,
+        email,
+        phone_number: phone,
+        description,
+      };
+
+      const res = await api.submitHelpdesk(token, payload);
+
+      if (!res?.success) {
+        throw new Error(res?.message || 'Request failed');
+      }
+
+      // clear form
       setName('');
       setEmail('');
       setPhone('');
       setDescription('');
-      setAttachments([]);
+      console.log('[DEBUG] helpdesk submit response', res);
+      Alert.alert('Success', res.message || 'Helpdesk request submitted successfully.');
+
+      // wait 2 seconds, then stop loader and navigate
+      setTimeout(() => {
+        setLoading(false);
+        navigation.navigate('Settings');
+      }, 2000);
     } catch (err) {
+      console.log('[DEBUG] submit helpdesk error', err);
       Alert.alert('Error', 'Could not submit request. Please try again later.');
-    } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
+    if (loading) return;
     navigation.navigate('Settings');
   };
 
-
-  const renderAttachment = ({ item }) => (
-    <View style={styles.attachmentRow}>
-      <Text numberOfLines={1} style={styles.attachmentName}>
-        {item.name || item.uri}
-      </Text>
-      <TouchableOpacity onPress={() => removeAttachment(item.uri)} style={styles.removeBtn}>
-        <Text style={styles.removeBtnText}>Remove</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Helpdesk / Contact Support</Text>
+    <KeyboardAvoidingView
+      style={styles.keyboardView}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Helpdesk / Contact Support</Text>
+          <Text style={styles.subtitle}>
+            Share your issue and our team will get back to you shortly.
+          </Text>
+
         <Text style={styles.label}>Name</Text>
         <TextInput
           style={styles.input}
@@ -148,7 +130,7 @@ export default function HelpDeskScreen() {
           multiline
           numberOfLines={5}
         />
-        <Text style={styles.label}>Attachments</Text>
+        {/* <Text style={styles.label}>Attachments</Text>
         <TouchableOpacity style={styles.uploadBtn} onPress={pickAttachmentsHandler}>
           <Text style={styles.uploadBtnText}>Select files</Text>
         </TouchableOpacity>
@@ -157,116 +139,160 @@ export default function HelpDeskScreen() {
           keyExtractor={item => item.uri}
           renderItem={renderAttachment}
           style={{ width: '100%', marginTop: 8 }}
-        />
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 16, marginTop: 24 }}>
-        <TouchableOpacity
+        /> */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
+          <TouchableOpacity
             style={[styles.button, styles.cancelBtn]}
             onPress={handleCancel}
             disabled={loading}
-        >
+          >
             <Text style={styles.cancelBtnText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.button, styles.submitBtn]}
             onPress={handleSubmit}
             disabled={loading}
-        >
-            <Text style={styles.submitBtnText}>Submit</Text>
-        </TouchableOpacity>
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitBtnText}>Submit</Text>
+            )}
+          </TouchableOpacity>
         </View>
-        <Text style={styles.smallText}>We will contact you on the provided email/phone.</Text>
+
+        <Text style={styles.smallText}>
+          We will contact you on the provided email/phone.
+        </Text>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, alignItems: 'center', backgroundColor: '#f7f9fc' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 16, color: '#0f172a' },
-  label: { alignSelf: 'flex-start', marginTop: 12, marginBottom: 6, color: '#334155', fontSize: 15 },
+  screen: {
+    flex: 1,
+    backgroundColor: '#F5F7FB',
+  },
+
+  keyboardView: {
+    flex: 1,
+  },
+
+  container: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#102A43',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+
+  subtitle: {
+    fontSize: 13,
+    color: '#718096',
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4A5568',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+
   input: {
     width: '100%',
-    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D0D7E2',
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e6eef8',
+    backgroundColor: '#FFFFFF',
     fontSize: 15,
-    color: '#0f172a',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
+    color: '#1A202C',
   },
-  textArea: { textAlignVertical: 'top', minHeight: 110 },
-  uploadBtn: {
-    width: '100%',
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#93c5fd',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-    backgroundColor: '#fff',
+
+  textArea: {
+    minHeight: 110,
+    textAlignVertical: 'top',
   },
-  uploadBtnText: { fontSize: 15, color: '#3069a1', fontWeight: '600' },
-  attachmentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#eef2ff',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 8,
+
+  helperText: {
+    fontSize: 12,
+    color: '#A0AEC0',
+    marginTop: 4,
   },
-  attachmentName: { flex: 1, marginRight: 8, color: '#0f172a' },
-  removeBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    backgroundColor: '#f97316',
-    borderRadius: 8,
+
+  errorText: {
+    fontSize: 12,
+    color: '#E53E3E',
+    marginTop: 4,
   },
-  removeBtnText: { color: '#fff', fontWeight: '600' },
-  submitBtn: {
-    width: '100%',
-    marginTop: 20,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#0ea5e9',
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  buttonsWrapper: {
+    marginTop: 24,
   },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  smallText: { marginTop: 12, color: '#475569', fontSize: 13 },
+
   button: {
-  flex: 1,
-  height: 44,
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 22,
-  marginHorizontal: 4,
-  elevation: 2,
-  minWidth: 100,
-  maxWidth: 170,
-},
-cancelBtn: {
-  backgroundColor: '#F54336',
-},
-submitBtn: {
-  backgroundColor: '#2196F3',
-},
-cancelBtnText: {
-  color: '#fff',
-  fontWeight: '600',
-  fontSize: 16,
-},
-submitBtnText: {
-  color: '#fff',
-  fontWeight: '600',
-  fontSize: 16,
-},
+    height: 48,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+
+  submitBtn: {
+    backgroundColor: '#1F4FE0',
+  },
+
+  cancelBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E0',
+  },
+
+  submitBtnDisabled: {
+    opacity: 0.6,
+  },
+
+  submitBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  cancelBtnText: {
+    color: '#4A5568',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  smallText: {
+    fontSize: 12,
+    color: '#718096',
+    textAlign: 'center',
+    marginTop: 16,
+  },
 });
