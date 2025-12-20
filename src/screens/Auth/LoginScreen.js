@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -47,13 +48,19 @@ export default function LoginScreen({ navigation }) {
         {/* logo + text */}
         <View style={styles.logoArea}>
           <View style={styles.logoCircle}>
-            <Text style={styles.logoInitial}>DW</Text>
+            <Image
+              source={require('../../assets/logo.jpeg')}
+              style={styles.logoImage}
+            />
           </View>
           <Text style={styles.appName}>Dr Wise Insurance</Text>
           <Text style={styles.tagline}>
             Secure coverage at your fingertips
           </Text>
         </View>
+
+
+
 
         <View style={styles.middle}>
           <View style={styles.card}>
@@ -142,7 +149,7 @@ export default function LoginScreen({ navigation }) {
 
           <Text style={styles.footerText}>
             For enquiry contact us:{' '}
-            <Text style={styles.footerPhone}>+91 9999999</Text>
+            <Text style={styles.footerPhone}>+91 7411 417 470</Text>
           </Text>
         </View>
       </View>
@@ -356,4 +363,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  logoCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#ffffff',     // white circle behind logo
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    overflow: 'hidden',             // hard clip to circle
+    borderWidth: 2,
+    borderColor: '#1d4ed8',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  logoImage: {
+    width: '90%',                   // crop edges a bit
+    height: '90%',
+    resizeMode: 'cover',            // fill circle, trim extra top/bottom
+  },
+
+
 });
