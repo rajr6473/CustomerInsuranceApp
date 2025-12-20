@@ -36,6 +36,8 @@ export default function NewPolicyScreen({ navigation }) {
   const [errors, setErrors] = useState({});
   const [successVisible, setSuccessVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [productThroughDr, setProductThroughDr] = useState('no');
+
 
   const validate = () => {
     const e = {};
@@ -46,6 +48,10 @@ export default function NewPolicyScreen({ navigation }) {
     if (!company.trim()) e.company = 'Please enter insurance company.';
     if (!renewDate) e.renewDate = 'Please select renewal date.';
     if (!remarks.trim()) e.remarks = 'Please enter remarks.';
+    if (!productThroughDr) {
+      e.productThroughDr = 'Please select if bought through Dr Wise.';
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -63,6 +69,7 @@ export default function NewPolicyScreen({ navigation }) {
         insurance_company: company.trim(),
         renewal_date: renewDate.toISOString().split('T')[0],
         remarks: remarks.trim(),
+        product_through_dr_wise: productThroughDr === 'yes',
       };
       console.log('[DEBUG] addPolicy payload', payload);
       const res = await api.addPolicy(token, payload);
@@ -186,6 +193,22 @@ export default function NewPolicyScreen({ navigation }) {
             />
             {errors.company ? (
               <Text style={styles.error}>{errors.company}</Text>
+            ) : null}
+
+            {/* Product through Dr Wise */}
+            <Text style={styles.label}>Product through Dr Wise</Text>
+            <RNPickerSelect
+              onValueChange={setProductThroughDr}
+              value={productThroughDr}
+              items={[
+                { label: 'Yes', value: 'yes' },
+                { label: 'No', value: 'no' },
+              ]}
+              placeholder={{ label: 'Select option', value: '' }}
+              style={pickerSelectStyles}
+            />
+            {errors.productThroughDr ? (
+              <Text style={styles.error}>{errors.productThroughDr}</Text>
             ) : null}
 
             {/* Renewal Date */}

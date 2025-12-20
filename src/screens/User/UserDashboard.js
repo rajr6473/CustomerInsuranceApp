@@ -15,6 +15,7 @@ import api from '../../services/api';
 
 export default function UserDashboard({ navigation }) {
   const { user } = useAuth();
+  console.log('[DEBUG] UserDashboard user', user);
   const displayName = user?.username || 'Customer';
   const policies_count = user?.portfolio_summary?.total_policies || 0;
   const upcoming_installments = user?.portfolio_summary?.upcoming_installments || 0;
@@ -91,7 +92,7 @@ export default function UserDashboard({ navigation }) {
             subtitle="View all your policies & coverage"
             onPress={() => navigation.navigate('MyInsurance')}
             iconColor="#0ea5e9"
-            badge="3"
+            badge={policies_count}
           />
           <Card
             icon="credit-card-clock-outline"
@@ -99,7 +100,7 @@ export default function UserDashboard({ navigation }) {
             subtitle="Premiums due in next few days"
             onPress={() => navigation.navigate('UpcomingInstallment')}
             iconColor="#22c55e"
-            badge="2"
+            badge={upcoming_installments}
           />
           <Card
             icon="autorenew"
@@ -107,7 +108,7 @@ export default function UserDashboard({ navigation }) {
             subtitle="Policies expiring soon"
             onPress={() => navigation.navigate('UpcomingRenewal')}
             iconColor="#f97316"
-            badge="1"
+            badge={upcoming_renewals}
           />
           <Card
             icon="plus-circle-outline"

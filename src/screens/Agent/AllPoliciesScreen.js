@@ -35,6 +35,7 @@ const mapPolicyFromApi = (p) => ({
   entryDate: p.entry_date || '',
   startDate: p.start_date || '',
   endDate: p.end_date || '',
+  commission_amount: p.commission_amount || '0',
   icon: 'medical-bag',
   color: '#34c759',
 });
@@ -67,6 +68,9 @@ const PolicyCard = ({ item }) => (
 
         <Text style={styles.cardLabel}>Start Date</Text>
         <Text style={styles.cardValue}>{item.startDate}</Text>
+
+        <Text style={styles.cardLabel}>Commission Amount</Text>
+        <Text style={styles.cardValue}>₹{item.commission_amount}</Text>
       </View>
 
       <View style={{ flex: 1 }}>
@@ -95,6 +99,7 @@ const AllPoliciesScreen = () => {
         setLoading(true);
         const token = await getToken();
         const apiPolicies = await api.getAllPolicies(token);
+        console.log('Fetched policies:', apiPolicies);
         const mapped = apiPolicies.map(mapPolicyFromApi);
         setPolicies(mapped);
       } catch (e) {

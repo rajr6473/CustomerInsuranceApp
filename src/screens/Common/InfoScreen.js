@@ -53,6 +53,11 @@ export default function InfoScreen() {
       .map(p => p[0]?.toUpperCase())
       .join('') || 'DW';
 
+  // Nominees (merge life + health, hide type)
+  const lifeNominees = profile?.nominees?.life_insurance_nominees || [];
+  const healthNominees = profile?.nominees?.health_insurance_nominees || [];
+  const allNominees = [...lifeNominees, ...healthNominees];
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
@@ -78,6 +83,7 @@ export default function InfoScreen() {
           contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
+          {/* Basic information */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Basic information</Text>
 
@@ -107,6 +113,7 @@ export default function InfoScreen() {
             </View>
           </View>
 
+          {/* Personal information */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Personal information</Text>
 
@@ -144,6 +151,62 @@ export default function InfoScreen() {
               <Text style={styles.label}>GST</Text>
               <Text style={styles.value}>{profile?.gst ?? '-'}</Text>
             </View>
+          </View>
+
+          {/* Nominees */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Nominees</Text>
+
+            {allNominees.length === 0 ? (
+              <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.label}>Nominee details</Text>
+                <Text style={styles.value}>Not available</Text>
+              </View>
+            ) : (
+              allNominees.map((nominee, index) => (
+                <View
+                  key={`${nominee.nominee_name}-${index}`}
+                  style={[
+                    styles.nomineeBlock,
+                    index === allNominees.length - 1 && { borderBottomWidth: 0 },
+                  ]}
+                >
+                  <View style={styles.nomineeHeaderRow}>
+                    <Text style={styles.nomineeName}>
+                      {nominee.nominee_name || 'Nominee'}
+                    </Text>
+                    {nominee.share_percentage != null && (
+                      <Text style={styles.nomineeShare}>
+                        {nominee.share_percentage}% share
+                      </Text>
+                    )}
+                  </View>
+
+                  <View style={styles.nomineeInfoRow}>
+                    <Text style={styles.nomineeLabel}>Relationship</Text>
+                    <Text style={styles.nomineeValue}>
+                      {nominee.relationship || '-'}
+                    </Text>
+                  </View>
+
+                  {nominee.age != null && (
+                    <View style={styles.nomineeInfoRow}>
+                      <Text style={styles.nomineeLabel}>Age</Text>
+                      <Text style={styles.nomineeValue}>{nominee.age}</Text>
+                    </View>
+                  )}
+
+                  {nominee.policy_number && (
+                    <View style={styles.nomineeInfoRow}>
+                      <Text style={styles.nomineeLabel}>Policy number</Text>
+                      <Text style={styles.nomineeValue}>
+                        {nominee.policy_number}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))
+            )}
           </View>
         </ScrollView>
       </View>
@@ -241,6 +304,44 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 13,
+    color: '#111827',
+    fontWeight: '500',
+    maxWidth: '55%',
+    textAlign: 'right',
+  },
+
+  // Nominees styles
+  nomineeBlock: {
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e5e7eb',
+  },
+  nomineeHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  nomineeName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  nomineeShare: {
+    fontSize: 11,
+    color: '#6b7280',
+  },
+  nomineeInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  nomineeLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  nomineeValue: {
+    fontSize: 12,
     color: '#111827',
     fontWeight: '500',
     maxWidth: '55%',

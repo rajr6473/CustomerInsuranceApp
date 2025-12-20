@@ -55,12 +55,16 @@ export default function AgentDashboard({ navigation }) {
             <Text style={styles.headerName}>{displayName}</Text>
           </View>
           <View style={styles.headerIconCircle}>
-            <Icon name="person-pin-circle" size={32} color="rgba(255,255,255,0.95)" />
+            <Icon
+              name="person-pin-circle"
+              size={32}
+              color="rgba(255,255,255,0.95)"
+            />
           </View>
         </View>
 
         {/* Mini stats strip */}
-        <View style={styles.headerStatsRow}>
+        {/* <View style={styles.headerStatsRow}>
           <View style={styles.headerStatCard}>
             <Text style={styles.headerStatNumber}>{customersCount}</Text>
             <Text style={styles.headerStatLabel}>Customers</Text>
@@ -73,8 +77,49 @@ export default function AgentDashboard({ navigation }) {
             <Text style={styles.headerStatNumber}>₹{commission}</Text>
             <Text style={styles.headerStatLabel}>Commission</Text>
           </View>
-        </View>
+        </View> */}
       </LinearGradient>
+
+      {/* Performance chart card just below header */}
+            {/* Performance snapshot card just below header */}
+      <View style={styles.chartWrapper}>
+        <View style={styles.chartCard}>
+          <View style={styles.chartHeaderRow}>
+            <Text style={styles.chartTitle}>Performance Snapshot</Text>
+            <Text style={styles.chartSubtitle}>Till date</Text>
+          </View>
+
+          <View style={styles.snapshotRow}>
+            {/* Customers pill */}
+            <View style={styles.snapshotItem}>
+              <View style={[styles.snapshotIconCircle, { backgroundColor: '#dcfce7' }]}>
+                <Icon name="group" size={18} color="#16a34a" />
+              </View>
+              <Text style={styles.snapshotLabel}>Customers</Text>
+              <Text style={styles.snapshotValue}>{customersCount}</Text>
+            </View>
+
+            {/* Policies pill */}
+            <View style={styles.snapshotItem}>
+              <View style={[styles.snapshotIconCircle, { backgroundColor: '#dbeafe' }]}>
+                <Icon name="description" size={18} color="#2563eb" />
+              </View>
+              <Text style={styles.snapshotLabel}>Policies</Text>
+              <Text style={styles.snapshotValue}>{policiesCount}</Text>
+            </View>
+
+            {/* Commission pill */}
+            <View style={styles.snapshotItem}>
+              <View style={[styles.snapshotIconCircle, { backgroundColor: '#fef3c7' }]}>
+                <Icon name="monetization-on" size={18} color="#f59e0b" />
+              </View>
+              <Text style={styles.snapshotLabel}>Commission</Text>
+              <Text style={styles.snapshotValue}>₹{commission}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
 
       {/* Content */}
       <ScrollView
@@ -91,11 +136,15 @@ export default function AgentDashboard({ navigation }) {
               onPress={() => navigation.navigate('AddCustomer')}
               activeOpacity={0.9}
             >
-              <View style={[styles.quickIconCircle, { backgroundColor: '#dcfce7' }]}>
+              <View
+                style={[styles.quickIconCircle, { backgroundColor: '#dcfce7' }]}
+              >
                 <Icon name="person-add" size={26} color="#16a34a" />
               </View>
               <Text style={styles.quickText}>Add Customer</Text>
-              <Text style={styles.quickSub}>Create a new customer profile</Text>
+              <Text style={styles.quickSub}>
+                Create a new customer profile
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -103,7 +152,9 @@ export default function AgentDashboard({ navigation }) {
               onPress={() => navigation.navigate('AddPolicy')}
               activeOpacity={0.9}
             >
-              <View style={[styles.quickIconCircle, { backgroundColor: '#dbeafe' }]}>
+              <View
+                style={[styles.quickIconCircle, { backgroundColor: '#dbeafe' }]}
+              >
                 <Icon name="note-add" size={26} color="#1d4ed8" />
               </View>
               <Text style={styles.quickText}>Add Policy</Text>
@@ -117,7 +168,9 @@ export default function AgentDashboard({ navigation }) {
               onPress={() => navigation.navigate('AddLeadForm')}
               activeOpacity={0.9}
             >
-              <View style={[styles.quickIconCircle, { backgroundColor: '#fff7ed' }]}>
+              <View
+                style={[styles.quickIconCircle, { backgroundColor: '#fff7ed' }]}
+              >
                 <Icon name="assignment" size={26} color="#f97316" />
               </View>
               <Text style={styles.quickText}>Add Lead</Text>
@@ -138,7 +191,12 @@ export default function AgentDashboard({ navigation }) {
               activeOpacity={0.9}
             >
               <View style={styles.statRow}>
-                <View style={[styles.statIconCircle, { backgroundColor: '#dcfce7' }]}>
+                <View
+                  style={[
+                    styles.statIconCircle,
+                    { backgroundColor: '#dcfce7' },
+                  ]}
+                >
                   <Icon name="group" size={22} color="#16a34a" />
                 </View>
                 <Text style={styles.statLabel}>All Customers</Text>
@@ -153,7 +211,12 @@ export default function AgentDashboard({ navigation }) {
               activeOpacity={0.9}
             >
               <View style={styles.statRow}>
-                <View style={[styles.statIconCircle, { backgroundColor: '#dbeafe' }]}>
+                <View
+                  style={[
+                    styles.statIconCircle,
+                    { backgroundColor: '#dbeafe' },
+                  ]}
+                >
                   <Icon name="description" size={22} color="#1d4ed8" />
                 </View>
                 <Text style={styles.statLabel}>All Policies</Text>
@@ -164,7 +227,12 @@ export default function AgentDashboard({ navigation }) {
 
             <View style={styles.statCard}>
               <View style={styles.statRow}>
-                <View style={[styles.statIconCircle, { backgroundColor: '#fef3c7' }]}>
+                <View
+                  style={[
+                    styles.statIconCircle,
+                    { backgroundColor: '#fef3c7' },
+                  ]}
+                >
                   <Icon name="monetization-on" size={22} color="#f59e0b" />
                 </View>
                 <Text style={styles.statLabel}>Commission Earned</Text>
@@ -259,6 +327,98 @@ const styles = StyleSheet.create({
     color: '#e5e7eb',
     fontSize: 12,
     marginTop: 2,
+  },
+
+  // Chart card
+    // Snapshot card (new design)
+  chartWrapper: {
+    paddingHorizontal: 18,
+    marginTop: 8,
+  },
+  chartCard: {
+    backgroundColor: '#020617',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  chartHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  chartTitle: {
+    color: '#e5e7eb',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  chartSubtitle: {
+    color: '#9ca3af',
+    fontSize: 11,
+  },
+  snapshotRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  snapshotItem: {
+    flex: 1,
+    marginHorizontal: 4,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(15,23,42,0.9)',
+    alignItems: 'center',
+  },
+  snapshotIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  snapshotLabel: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+  snapshotValue: {
+    marginTop: 2,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#f9fafb',
+  },
+
+  chartBarsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingTop: 4,
+  },
+  chartBarItem: {
+    alignItems: 'center',
+    width: '30%',
+  },
+  chartBar: {
+    width: 20,
+    borderRadius: 999,
+  },
+  chartBarLabel: {
+    marginTop: 8,
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+  chartBarValue: {
+    marginTop: 2,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f9fafb',
   },
 
   // Scroll content

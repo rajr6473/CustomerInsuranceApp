@@ -29,7 +29,6 @@ export default function AddLeadForm(props) {
 
   const [productInterest, setProductInterest] = useState('');
   const [priority, setPriority] = useState('');
-  const [currentStage, setCurrentStage] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -95,7 +94,7 @@ export default function AddLeadForm(props) {
   const handleSubmit = async () => {
     setErrorMsg('');
 
-    if (!name || !contactNumber || !productInterest || !priority || !currentStage) {
+    if (!name || !contactNumber || !productInterest || !priority) {
       setErrorMsg('Please fill all required fields marked with *');
       return;
     }
@@ -114,7 +113,6 @@ export default function AddLeadForm(props) {
         note: notes,
         product_interest: productInterest,
         priority,
-        current_stage: currentStage,
         referred_by: "Friend Reference",
         lead_source: "agent_referral",
       };
@@ -232,18 +230,6 @@ export default function AddLeadForm(props) {
             </Picker>
           </View>
 
-          <Text style={styles.label}>Current Stage *</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={currentStage}
-              onValueChange={value => setCurrentStage(value)}
-              style={styles.picker}
-            >
-              {stageOptions.map(opt => (
-                <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
-              ))}
-            </Picker>
-          </View>
         </View>
 
         {/* Address Information */}
